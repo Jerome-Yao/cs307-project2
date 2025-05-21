@@ -14,14 +14,42 @@ public class LRUReplacer {
     }
 
     public int Victim() {
-        return -1;
+        if (LRUList.isEmpty()) {
+            return -1;
+        }
+        int victim = LRUList.remove();
+        LRUHash.remove(victim);
+        return victim;
     }
 
     public void Pin(int frameId) {
+        if (pinnedFrames.contains(frameId)) {
+            return;
+        }
+        if (this.size()>= maxSize) {
+            throw new RuntimeException("REPLACER IS FULL");
+        }
+        pinnedFrames.add(frameId);
+        if (LRUHash.contains(frameId)) {
+            LRUHash.remove(frameId);
+        }
+        if (LRUList.contains(frameId)) {
+            LRUList.remove(LRUList.indexOf(frameId));
+        }
     }
 
 
     public void Unpin(int frameId) {
+        if (LRUHash.contains(frameId)) {
+            return;
+        }
+        if (pinnedFrames.contains(frameId)) {
+            pinnedFrames.remove(frameId);
+            LRUHash.add(frameId);
+            LRUList.add(frameId);
+        }else {
+            throw new RuntimeException("UNPIN PAGE NOT FOUND");
+        }
     }
 
 
