@@ -5,11 +5,13 @@ import java.io.StringReader;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
+import net.sf.jsqlparser.statement.DescribeStatement;
 import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.show.ShowTablesStatement;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -45,7 +47,9 @@ public class LogicalPlanner {
         else if (stmt instanceof Delete deleteStmt) {
             operator = handleDelete(dbManager, deleteStmt);
         } else if (stmt instanceof Drop dropStmt) {
-            operator = handleDrop(dbManager, dropStmt);
+//            operator = handleDrop(dbManager, dropStmt);
+            dbManager.dropTable(dropStmt.getName().getName());
+            return null;
         }
         // functional
         else if (stmt instanceof CreateTable createTableStmt) {
@@ -56,11 +60,21 @@ public class LogicalPlanner {
             ExplainExecutor explainExecutor = new ExplainExecutor(explainStatement, dbManager);
             explainExecutor.execute();
             return null;
-        } else if (stmt instanceof ShowStatement showStatement) {
+        } else if (stmt instanceof ShowTablesStatement showStatement) {
+            dbManager.showTables();
+            return null;
+        }
+        else if (stmt instanceof DescribeStatement describeStatement){
+            dbManager.descTable(describeStatement.getTable().getName());
+            return null;
+        }
+        else if (stmt instanceof ShowStatement showStatement) {
             ShowDatabaseExecutor showDatabaseExecutor = new ShowDatabaseExecutor(showStatement);
             showDatabaseExecutor.execute();
             return null;
-        } else {
+
+        }
+        else {
             throw new DBException(ExceptionTypes.UnsupportedCommand((stmt.toString())));
         }
         return operator;

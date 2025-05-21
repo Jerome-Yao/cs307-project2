@@ -186,6 +186,11 @@ public class DiskManager {
         String real_path = currentDir + "/" + filename;
         File file = new File(real_path);
         if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File f : file.listFiles()) {
+                    f.delete();
+                }
+            }
             if (!file.delete()) {
                 throw new DBException(ExceptionTypes.BadIOError("File deletion failed: " + real_path));
             }

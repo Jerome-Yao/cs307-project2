@@ -8,6 +8,7 @@ import edu.sustech.cs307.meta.TableMeta;
 import edu.sustech.cs307.storage.BufferPool;
 import edu.sustech.cs307.storage.DiskManager;
 import org.apache.commons.lang3.StringUtils;
+import org.jline.utils.Log;
 import org.pmw.tinylog.Logger;
 
 import java.io.File;
@@ -22,7 +23,7 @@ public class DBManager {
     private final RecordManager recordManager;
 
     public DBManager(DiskManager diskManager, BufferPool bufferPool, RecordManager recordManager,
-            MetaManager metaManager) {
+                     MetaManager metaManager) {
         this.diskManager = diskManager;
         this.bufferPool = bufferPool;
         this.recordManager = recordManager;
@@ -57,7 +58,13 @@ public class DBManager {
      * Each table name is displayed in a separate row within the ASCII borders.
      */
     public void showTables() {
-        throw new RuntimeException("Not implement");
+        Logger.info("|-----------|");
+        Logger.info("|  TABLES   |");
+        Logger.info("|-----------|");
+        for (String table : metaManager.getTableNames()) {
+            Logger.info("|  " + StringUtils.center(table, 8) + " |");
+        }
+        Logger.info("|-----------|");
         //todo: complete show table
         // | -- TABLE -- |
         // | -- ${table} -- |
@@ -65,7 +72,18 @@ public class DBManager {
     }
 
     public void descTable(String table_name) {
-        throw new RuntimeException("Not implemented yet");
+        Logger.info("|---------------------------|");
+        Logger.info("|" + StringUtils.center("FIELD", 13) + "|" + StringUtils.center("TYPE", 13) + "|");
+        try {
+            for (var col : metaManager.getTable(table_name).getColumns().keySet()) {
+                Logger.info("|" + StringUtils.center(col, 13) + "|" + StringUtils.center(metaManager.getTable(table_name).getColumns().get(col).type.toString(), 13)
+                        + "|");
+            }
+        } catch (DBException e) {
+            Logger.error("Table does not exist: " + table_name);
+            return;
+        }
+        Logger.info("|---------------------------|");
         //todo: complete describe table
         // | -- TABLE Field -- | -- Column Type --|
         // | --  ${table field} --| -- ${table type} --|
@@ -100,13 +118,16 @@ public class DBManager {
     /**
      * Drops a table from the database by removing its metadata and associated
      * files.
-     * 
+     *
      * @param table_name The name of the table to be dropped
      * @throws DBException If the table directory does not exist or encounters IO
      *                     errors during deletion
      */
     public void dropTable(String table_name) throws DBException {
         // todo: finish drop table method
+        Logger.info("Drop table: " + table_name);
+        metaManager.dropTable(table_name);
+        recordManager.DeleteFile(table_name);
     }
 
     /**
