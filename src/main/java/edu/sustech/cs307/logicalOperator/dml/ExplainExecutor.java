@@ -21,6 +21,9 @@ public class ExplainExecutor implements DMLExecutor {
 
     @Override
     public void execute() throws DBException {
-       //todo: finish this function here, and add log info
+        // todo: finish this function here, and add log info
+
+        LogicalOperator operator = LogicalPlanner.handleSelect(dbManager, explainStatement.getStatement());
+        Logger.info(operator.toString());
     }
 }
