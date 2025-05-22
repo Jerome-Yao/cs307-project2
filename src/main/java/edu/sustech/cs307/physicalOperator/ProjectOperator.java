@@ -7,6 +7,7 @@ import edu.sustech.cs307.tuple.Tuple;
 import edu.sustech.cs307.meta.TabCol;
 import edu.sustech.cs307.value.ValueType;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +67,13 @@ public class ProjectOperator implements PhysicalOperator {
 
     @Override
     public ArrayList<ColumnMeta> outputSchema() {
-        //todo: return the fields only appear in select items.
-        return child.outputSchema();
+        // todo: return the fields only appear in select items.
+        ArrayList<ColumnMeta> outputSchema = new ArrayList<>();
+        for (ColumnMeta col: child.outputSchema()){
+            if (this.outputSchema.contains(new TabCol(col.tableName, col.name))) {
+                outputSchema.add(col);
+            }
+        }
+        return outputSchema;
     }
 }
