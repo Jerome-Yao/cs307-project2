@@ -36,6 +36,8 @@ public class PhysicalPlanner {
             return handleInsert(dbManager, insertOperator);
         } else if (logicalOp instanceof LogicalUpdateOperator updateOperator) {
             return handleUpdate(dbManager, updateOperator);
+        } else if (logicalOp instanceof LogicalDeleteOperator deleteOperator) {
+            return handleDelete(dbManager, deleteOperator);
         }
 
         else {
@@ -86,6 +88,12 @@ public class PhysicalPlanner {
         return new ProjectOperator(inputOp, logicalProjectOp.getOutputSchema());
     }
 
+    private static PhysicalOperator handleDelete(DBManager dbManager, LogicalDeleteOperator logicalDeleteOp)
+            throws DBException {
+        PhysicalOperator inputOp = generateOperator(dbManager, logicalDeleteOp.getChild());
+        return new DeleteOperator(inputOp, logicalDeleteOp.getTableName(), dbManager);
+    }
+
     /**
      * 处理将逻辑插入操作转换为物理插入运算符的过程
      * 
@@ -102,6 +110,7 @@ public class PhysicalPlanner {
         List<String> columns = new ArrayList<>();
         if (logicalInsertOp.columns != null) {
             // the length must equal to the number of columns in the table
+            // todo: support null here (advanced)
             if (tableMeta.columns.size() != logicalInsertOp.columns.size()) {
                 throw new DBException(ExceptionTypes.InsertColumnSizeMismatch());
             }
@@ -186,13 +195,14 @@ public class PhysicalPlanner {
         }
     }
 
-
-    private static PhysicalOperator handleUpdate(DBManager dbManager, LogicalUpdateOperator logicalUpdateOp) throws DBException {
+    private static PhysicalOperator handleUpdate(DBManager dbManager, LogicalUpdateOperator logicalUpdateOp)
+            throws DBException {
         // TODO: Implement handleUpdate
         PhysicalOperator scanner = generateOperator(dbManager, logicalUpdateOp.getChild());
-        if (logicalUpdateOp.getColumns().size() != 1 ) {
+        if (logicalUpdateOp.getColumns().size() != 1) {
             throw new DBException(ExceptionTypes.InvalidSQL("INSERT", "Unsupported expression list"));
         }
-        return new UpdateOperator(scanner, logicalUpdateOp.getTableName(), logicalUpdateOp.getColumns().get(0), logicalUpdateOp.getExpression());
+        return new UpdateOperator(scanner, logicalUpdateOp.getTableName(), logicalUpdateOp.getColumns().get(0),
+                logicalUpdateOp.getExpression());
     }
 }

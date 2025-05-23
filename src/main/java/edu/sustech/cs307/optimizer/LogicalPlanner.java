@@ -121,6 +121,9 @@ public class LogicalPlanner {
 
     private static LogicalOperator handleDelete(DBManager dbManager, Delete deleteStmt) throws DBException {
         LogicalOperator root = new LogicalTableScanOperator(deleteStmt.getTable().getName(), dbManager);
+        if (deleteStmt.getWhere() != null) {
+            root = new LogicalFilterOperator(root, deleteStmt.getWhere());
+        }
         return new LogicalDeleteOperator(root, deleteStmt.getTable().getName(), deleteStmt.getWhere());
     }
 

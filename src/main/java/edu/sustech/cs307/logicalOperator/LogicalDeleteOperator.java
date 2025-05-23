@@ -15,6 +15,13 @@ public class LogicalDeleteOperator extends LogicalOperator {
         this.expressions = expression;
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
+    public Expression getExpressions() {
+        return expressions;
+    }   
     public String toString() {
         return "DeleteOperator(table=" + tableName + ", expressions=" + expressions
                 + ")\n ├── " + childern.get(0);

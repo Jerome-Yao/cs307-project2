@@ -2,11 +2,15 @@ package edu.sustech.cs307.physicalOperator;
 
 import net.sf.jsqlparser.expression.Expression;
 import edu.sustech.cs307.meta.ColumnMeta;
+import edu.sustech.cs307.record.RID;
+import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.Tuple;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.sustech.cs307.exception.DBException;
+import edu.sustech.cs307.exception.ExceptionTypes;
+
 import org.pmw.tinylog.Logger;
 
 public class FilterOperator implements PhysicalOperator {
@@ -106,6 +110,15 @@ public class FilterOperator implements PhysicalOperator {
         return currentTuple;
     }
 
+    public RID getCurrentRID() {
+        if (child instanceof SeqScanOperator) {
+            // 如果子操作符是SeqScanOperator，获取当前RID
+            return ((TableTuple)((SeqScanOperator) child).Current()).getRID();
+        } else {
+            throw new RuntimeException("FilterOperator仅支持SeqScanOperator作为子操作符");
+        }
+    }
+
     @Override
     public void Close() {
         if (child != null) {
@@ -121,4 +134,5 @@ public class FilterOperator implements PhysicalOperator {
     public ArrayList<ColumnMeta> outputSchema() {
         return child.outputSchema();
     }
+
 }
