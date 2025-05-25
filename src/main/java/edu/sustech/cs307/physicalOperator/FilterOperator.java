@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.sustech.cs307.exception.DBException;
-import edu.sustech.cs307.exception.ExceptionTypes;
 
 import org.pmw.tinylog.Logger;
 

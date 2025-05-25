@@ -89,6 +89,20 @@ public class Value {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !(o instanceof Value)) return false;
+        Value other = (Value) o;
+        return java.util.Objects.equals(type, other.type) &&
+               java.util.Objects.equals(value, other.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(type, value);
+    }
+
+    @Override
     public String toString() {
         switch (type) {
             case INTEGER, FLOAT ->{

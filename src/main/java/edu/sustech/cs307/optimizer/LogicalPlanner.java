@@ -43,11 +43,11 @@ public class LogicalPlanner {
         } else if (stmt instanceof Update updateStmt) {
             operator = handleUpdate(dbManager, updateStmt);
         }
-        //todo: add condition of handleDelete
+        // todo: add condition of handleDelete
         else if (stmt instanceof Delete deleteStmt) {
             operator = handleDelete(dbManager, deleteStmt);
         } else if (stmt instanceof Drop dropStmt) {
-//            operator = handleDrop(dbManager, dropStmt);
+            // operator = handleDrop(dbManager, dropStmt);
             dbManager.dropTable(dropStmt.getName().getName());
             return null;
         }
@@ -63,23 +63,19 @@ public class LogicalPlanner {
         } else if (stmt instanceof ShowTablesStatement showStatement) {
             dbManager.showTables();
             return null;
-        }
-        else if (stmt instanceof DescribeStatement describeStatement){
+        } else if (stmt instanceof DescribeStatement describeStatement) {
             dbManager.descTable(describeStatement.getTable().getName());
             return null;
-        }
-        else if (stmt instanceof ShowStatement showStatement) {
+        } else if (stmt instanceof ShowStatement showStatement) {
             ShowDatabaseExecutor showDatabaseExecutor = new ShowDatabaseExecutor(showStatement);
             showDatabaseExecutor.execute();
             return null;
 
-        }
-        else {
+        } else {
             throw new DBException(ExceptionTypes.UnsupportedCommand((stmt.toString())));
         }
         return operator;
     }
-
 
     public static LogicalOperator handleSelect(DBManager dbManager, Select selectStmt) throws DBException {
         PlainSelect plainSelect = selectStmt.getPlainSelect();
@@ -103,6 +99,10 @@ public class LogicalPlanner {
         // 在 Join 之后应用 Filter，Filter 的输入是 Join 的结果 (root)
         if (plainSelect.getWhere() != null) {
             root = new LogicalFilterOperator(root, plainSelect.getWhere());
+        }
+        if (plainSelect.getGroupBy() != null) {
+            root = new LogicalGroupByOperator(root, plainSelect.getFromItem().toString(),
+                    plainSelect.getGroupBy().getGroupByExpressions());
         }
         root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         return root;

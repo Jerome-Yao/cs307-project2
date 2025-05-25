@@ -16,12 +16,12 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.Values;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 public class PhysicalPlanner {
     public static PhysicalOperator generateOperator(DBManager dbManager, LogicalOperator logicalOp) throws DBException {
         if (logicalOp instanceof LogicalTableScanOperator tableScanOperator) {
@@ -38,6 +38,8 @@ public class PhysicalPlanner {
             return handleUpdate(dbManager, updateOperator);
         } else if (logicalOp instanceof LogicalDeleteOperator deleteOperator) {
             return handleDelete(dbManager, deleteOperator);
+        } else if (logicalOp instanceof LogicalGroupByOperator groupByOperator) {
+            return handleGroupBy(dbManager, groupByOperator);
         }
 
         else {
@@ -92,6 +94,29 @@ public class PhysicalPlanner {
             throws DBException {
         PhysicalOperator inputOp = generateOperator(dbManager, logicalDeleteOp.getChild());
         return new DeleteOperator(inputOp, logicalDeleteOp.getTableName(), dbManager);
+    }
+
+    private static PhysicalOperator handleGroupBy(DBManager dbManager, LogicalGroupByOperator logicalGroupByOp)
+            throws DBException {
+        PhysicalOperator inputOp = generateOperator(dbManager, logicalGroupByOp.getChild());
+        ExpressionList<Expression> gbe = logicalGroupByOp.getGroupByExpressions();
+        List<Column> groupByColumns = new ArrayList<>();
+
+        for (Expression expr : gbe) {
+            if (expr instanceof Column) {
+                String colName = ((Column) expr).getColumnName();
+                groupByColumns.add(new Column(colName));
+                // use colName...
+            }
+            // expr.accept(new ExpressionVisitorAdapter<Expression>() {
+            // @Override
+            // public void visit(Column col) {
+            // System.out.println(col.getFullyQualifiedName());
+            // groupByColumns.add(new Column(col.getColumnName()));
+            // }
+            // });
+        }
+        return new GroupByOperator(inputOp, groupByColumns, logicalGroupByOp.getTableName());
     }
 
     /**

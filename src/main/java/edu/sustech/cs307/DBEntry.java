@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.Log;
 import org.pmw.tinylog.Logger;
 
 import java.util.ArrayList;
