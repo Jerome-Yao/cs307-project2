@@ -12,6 +12,7 @@ import edu.sustech.cs307.storage.DiskManager;
 import edu.sustech.cs307.system.DBManager;
 import edu.sustech.cs307.system.RecordManager;
 import edu.sustech.cs307.tuple.Tuple;
+import edu.sustech.cs307.value.Value;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jline.reader.LineReader;
@@ -107,6 +108,7 @@ public class DBEntry {
                     Logger.error(e.getMessage());
                     Logger.error("An error occurred. Please try again.");
                     Logger.error(Arrays.toString(e.getStackTrace()));
+                    throw new RuntimeException(e);
                 }
             }
         } catch (Exception e) {
@@ -129,7 +131,8 @@ public class DBEntry {
 
     private static String getRecordString(Tuple tuple) throws DBException {
         StringBuilder tuple_string = new StringBuilder("|");
-        for (var entry : tuple.getValues()) {
+        Value[] values=tuple.getValues();
+        for (Value entry : tuple.getValues()) {
             String tabCol = String.format("%s", entry);
             String centeredText = StringUtils.center(tabCol, 15, ' ');
             tuple_string.append(centeredText).append("|");

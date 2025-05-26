@@ -3,6 +3,8 @@ package edu.sustech.cs307.logicalOperator;
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.meta.TabCol;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -36,7 +38,28 @@ public class LogicalProjectOperator extends LogicalOperator {
                 String tableName = column.getTable().getName();
                 String columnName = column.getColumnName();
                 outputSchema.add(new TabCol(tableName, columnName));
-            } else {
+            } else if (selectItem.getExpression() instanceof Function function) {
+                // 处理函数表达式，特别是聚合函数
+                String functionName = function.getName().toUpperCase();
+                System.out.println(functionName);
+                String alias = selectItem.getAlias() != null ? selectItem.getAlias().getName() : functionName;
+
+                // 从函数参数获取表名和列名
+                String tableName = "";
+                String columnName = alias;
+
+                if (function.getParameters() != null && !function.getParameters().isEmpty()) {
+                    Expression firstParam = function.getParameters().get(0);
+                    if (firstParam instanceof Column col) {
+                        tableName = col.getTable() != null ? col.getTable().getName() : "";
+                        columnName = functionName + "_" + col.getColumnName();
+                    }
+                }
+
+                outputSchema.add(new TabCol(tableName, columnName));
+            }
+
+            else {
                 throw new DBException(ExceptionTypes.NotSupportedOperation(selectItem.getExpression()));
             }
         }

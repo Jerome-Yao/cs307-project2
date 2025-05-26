@@ -24,6 +24,10 @@ import edu.sustech.cs307.logicalOperator.dml.CreateTableExecutor;
 import edu.sustech.cs307.logicalOperator.dml.ExplainExecutor;
 import edu.sustech.cs307.logicalOperator.dml.ShowDatabaseExecutor;
 import edu.sustech.cs307.exception.DBException;
+import edu.sustech.cs307.aggregate.AggregateExpression;
+import edu.sustech.cs307.aggregate.AggregateParser;
+
+import java.util.List;
 
 public class LogicalPlanner {
     public static LogicalOperator resolveAndPlan(DBManager dbManager, String sql) throws DBException {
@@ -100,10 +104,22 @@ public class LogicalPlanner {
         if (plainSelect.getWhere() != null) {
             root = new LogicalFilterOperator(root, plainSelect.getWhere());
         }
-        if (plainSelect.getGroupBy() != null) {
+        
+        // Check if there are aggregate functions in SELECT clause
+        List<AggregateExpression> aggregates = AggregateParser.parseAggregatesFromSelectItems(
+            plainSelect.getSelectItems(), plainSelect.getFromItem().toString());
+        
+        if (!aggregates.isEmpty() || plainSelect.getGroupBy() != null) {
+            // Use LogicalAggregateOperator for queries with aggregates or GROUP BY
+            root = new LogicalAggregateOperator(root, plainSelect.getFromItem().toString(),
+                    plainSelect.getGroupBy() != null ? plainSelect.getGroupBy().getGroupByExpressions() : null,
+                    aggregates);
+        } else if (plainSelect.getGroupBy() != null) {
+            // Fallback to old GroupBy operator for GROUP BY without aggregates
             root = new LogicalGroupByOperator(root, plainSelect.getFromItem().toString(),
                     plainSelect.getGroupBy().getGroupByExpressions());
         }
+        
         root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
         return root;
     }

@@ -9,6 +9,9 @@ import edu.sustech.cs307.value.Value;
 import edu.sustech.cs307.value.ValueType;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.meta.TableMeta;
+import edu.sustech.cs307.meta.TabCol;
+import edu.sustech.cs307.aggregate.AggregateExpression;
+import edu.sustech.cs307.aggregate.AggregateFunction;
 
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
@@ -40,6 +43,8 @@ public class PhysicalPlanner {
             return handleDelete(dbManager, deleteOperator);
         } else if (logicalOp instanceof LogicalGroupByOperator groupByOperator) {
             return handleGroupBy(dbManager, groupByOperator);
+        } else if (logicalOp instanceof LogicalAggregateOperator aggregateOperator) {
+            return handleAggregate(dbManager, aggregateOperator);
         }
 
         else {
@@ -117,6 +122,26 @@ public class PhysicalPlanner {
             // });
         }
         return new GroupByOperator(inputOp, groupByColumns, logicalGroupByOp.getTableName());
+    }
+
+    private static PhysicalOperator handleAggregate(DBManager dbManager, LogicalAggregateOperator logicalAggregateOp)
+            throws DBException {
+        PhysicalOperator inputOp = generateOperator(dbManager, logicalAggregateOp.getChild());
+        ExpressionList<Expression> gbe = logicalAggregateOp.getGroupByExpressions();
+        List<Column> groupByColumns = new ArrayList<>();
+
+        if (gbe != null) {
+            for (Expression expr : gbe) {
+                if (expr instanceof Column) {
+                    String colName = ((Column) expr).getColumnName();
+                    groupByColumns.add(new Column(colName));
+                }
+            }
+        }
+
+        return new AggregateOperator(inputOp, groupByColumns, 
+                                   logicalAggregateOp.getAggregateExpressions(), 
+                                   logicalAggregateOp.getTableName());
     }
 
     /**
