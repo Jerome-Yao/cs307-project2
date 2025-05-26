@@ -84,7 +84,6 @@ public abstract class Tuple {
         } catch (DBException e) {
             e.printStackTrace(); // Handle exception properly
         }
-        System.out.println("no match");
         return false;
     }
 

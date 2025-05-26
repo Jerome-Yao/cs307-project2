@@ -176,7 +176,7 @@ public class AggregateOperator implements PhysicalOperator {
                 assert(tabCol.equals(temp));
                 // Value value = resultValues.get(tabCol);
                 if (resultValues.get(tabCol) == null){
-                    System.out.println("Value is null for column at getValue");
+                    // System.out.println("Value is null for column at getValue");
                     return null;
                 }
                 else{
@@ -206,7 +206,6 @@ public class AggregateOperator implements PhysicalOperator {
                 Value[] values = new Value[resultValues.size()];
                 int i = 0;
                 for (TabCol key : resultValues.keySet()) {
-                    System.out.println(key);
                     values[i++] = getValue(key);
                 }
                 return values;

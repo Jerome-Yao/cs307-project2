@@ -23,7 +23,6 @@ public class FilterOperator implements PhysicalOperator {
     public FilterOperator(PhysicalOperator child, Expression whereExpr) {
         this.child = child;
         this.whereExpr = whereExpr;
-        System.out.println("FilterOperator: " + this.whereExpr);
     }
 
     public FilterOperator(PhysicalOperator child, Collection<Expression> whereExpr) {
