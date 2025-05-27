@@ -33,6 +33,7 @@ public class InMemoryOrderedIndex implements Index {
             Logger.error("Error loading index data: " + e.getMessage());
         }
     }
+    
 
     @Override
     public RID EqualTo(Value value) {
