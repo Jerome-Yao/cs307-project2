@@ -1,17 +1,31 @@
 package edu.sustech.cs307.logicalOperator;
 
+import java.util.Collections;
+import java.util.List;
+
+import edu.sustech.cs307.tuple.Tuple;
 import net.sf.jsqlparser.expression.Expression;
 
-import java.util.Collections;
-
 public class LogicalFilterOperator extends LogicalOperator {
+
     private final Expression condition;
     private final LogicalOperator child;
+    private List<Tuple> subQueryTuples = null;
 
     public LogicalFilterOperator(LogicalOperator child, Expression condition) {
         super(Collections.singletonList(child));
         this.child = child;
         this.condition = condition;
+    }
+
+    public LogicalFilterOperator(
+            LogicalOperator child,
+            Expression condition,
+            List<Tuple> subQueryTuples) {
+        super(Collections.singletonList(child));
+        this.child = child;
+        this.condition = condition;
+        this.subQueryTuples = subQueryTuples;
     }
 
     public LogicalOperator getChild() {
@@ -20,6 +34,10 @@ public class LogicalFilterOperator extends LogicalOperator {
 
     public Expression getWhereExpr() {
         return condition;
+    }
+
+    public List<Tuple> getSubQueryTuples() {
+        return subQueryTuples;
     }
 
     @Override

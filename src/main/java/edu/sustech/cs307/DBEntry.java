@@ -129,7 +129,7 @@ public class DBEntry {
         return header.toString();
     }
 
-    private static String getRecordString(Tuple tuple) throws DBException {
+    public static String getRecordString(Tuple tuple) throws DBException {
         StringBuilder tuple_string = new StringBuilder("|");
         Value[] values=tuple.getValues();
         for (Value entry : tuple.getValues()) {

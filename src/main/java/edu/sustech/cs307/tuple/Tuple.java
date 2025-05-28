@@ -1,5 +1,7 @@
 package edu.sustech.cs307.tuple;
 
+import java.util.List;
+
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.meta.TabCol;
@@ -20,6 +22,16 @@ public abstract class Tuple {
 
     public boolean eval_expr(Expression expr) throws DBException {
         return evaluateCondition(this, expr);
+    }
+
+    // TODO
+    public boolean eval_expr(List<Tuple> targetTuples, Expression whereExpr) throws DBException {
+        for (Tuple tuple : targetTuples) {
+            if (evaluateCondition(tuple, whereExpr)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean evaluateCondition(Tuple tuple, Expression whereExpr) {
