@@ -25,6 +25,7 @@ import net.sf.jsqlparser.statement.select.Values;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 public class PhysicalPlanner {
     public static PhysicalOperator generateOperator(DBManager dbManager, LogicalOperator logicalOp) throws DBException {
         if (logicalOp instanceof LogicalTableScanOperator tableScanOperator) {
@@ -74,7 +75,13 @@ public class PhysicalPlanner {
     private static PhysicalOperator handleFilter(DBManager dbManager, LogicalFilterOperator logicalFilterOp)
             throws DBException {
         PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
-        return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
+        if (logicalFilterOp.getSubQueryTuples() != null) {
+            // If subquery tuples are provided, use them to filter
+            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr(), logicalFilterOp.getSubQueryTuples());
+
+        } else {
+            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
+        }
     }
 
     private static PhysicalOperator handleJoin(DBManager dbManager, LogicalJoinOperator logicalJoinOp)
@@ -139,9 +146,9 @@ public class PhysicalPlanner {
             }
         }
 
-        return new AggregateOperator(inputOp, groupByColumns, 
-                                   logicalAggregateOp.getAggregateExpressions(), 
-                                   logicalAggregateOp.getTableName());
+        return new AggregateOperator(inputOp, groupByColumns,
+                logicalAggregateOp.getAggregateExpressions(),
+                logicalAggregateOp.getTableName());
     }
 
     /**

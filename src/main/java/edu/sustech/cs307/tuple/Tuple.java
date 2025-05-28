@@ -1,5 +1,7 @@
 package edu.sustech.cs307.tuple;
 
+import java.util.List;
+
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.exception.ExceptionTypes;
 import edu.sustech.cs307.meta.TabCol;
@@ -20,6 +22,16 @@ public abstract class Tuple {
 
     public boolean eval_expr(Expression expr) throws DBException {
         return evaluateCondition(this, expr);
+    }
+
+    // TODO
+    public boolean eval_expr(List<Tuple> targetTuples, Expression whereExpr) throws DBException {
+        for (Tuple tuple : targetTuples) {
+            if (evaluateCondition(tuple, whereExpr)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean evaluateCondition(Tuple tuple, Expression whereExpr) {
@@ -48,7 +60,15 @@ public abstract class Tuple {
 
         try {
             if (leftExpr instanceof Column leftColumn) {
-                leftValue = tuple.getValue(new TabCol(leftColumn.getTableName(), leftColumn.getColumnName()));
+                // leftValue = tuple.getValue(new TabCol(leftColumn.getTableName(),
+                // leftColumn.getColumnName()));
+                // get table name
+                String table_name = leftColumn.getTableName();
+                if (tuple instanceof TableTuple) {
+                    TableTuple tableTuple = (TableTuple) tuple;
+                    table_name = tableTuple.getTableName();
+                }
+                leftValue = tuple.getValue(new TabCol(table_name, leftColumn.getColumnName()));
                 if (leftValue.type == ValueType.CHAR) {
                     leftValue = new Value(leftValue.toString());
                 }
@@ -57,7 +77,15 @@ public abstract class Tuple {
             }
 
             if (rightExpr instanceof Column rightColumn) {
-                rightValue = tuple.getValue(new TabCol(rightColumn.getTableName(), rightColumn.getColumnName()));
+                // rightValue = tuple.getValue(new TabCol(rightColumn.getTableName(),
+                // rightColumn.getColumnName()));
+                // get table name
+                String table_name = rightColumn.getTableName();
+                if (tuple instanceof TableTuple) {
+                    TableTuple tableTuple = (TableTuple) tuple;
+                    table_name = tableTuple.getTableName();
+                }
+                rightValue = tuple.getValue(new TabCol(table_name, rightColumn.getColumnName()));
             } else {
                 rightValue = getConstantValue(rightExpr); // Handle constant right value
 

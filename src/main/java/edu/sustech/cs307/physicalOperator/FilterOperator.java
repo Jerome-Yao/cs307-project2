@@ -1,12 +1,14 @@
 package edu.sustech.cs307.physicalOperator;
 
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.statement.select.LateralSubSelect;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.record.RID;
 import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.Tuple;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import edu.sustech.cs307.exception.DBException;
 
@@ -15,14 +17,25 @@ import org.pmw.tinylog.Logger;
 public class FilterOperator implements PhysicalOperator {
     private PhysicalOperator child;
     private Expression whereExpr;
+    private LateralSubSelect lateralSubSelect;
     private Tuple currentTuple;
     private boolean isOpen = false;
     // 标记是否已经准备好下一个元组
     private boolean readyForNext = false;
+    private List<Tuple> subQueryTuples = null; // 用于存储子查询的结果
+    private boolean subQueryType = false; // 用于标记是否是子查询类型
 
     public FilterOperator(PhysicalOperator child, Expression whereExpr) {
         this.child = child;
         this.whereExpr = whereExpr;
+    }
+
+    public FilterOperator(PhysicalOperator child, Expression whereExpr, List<Tuple> subQueryTuples) {
+        this.child = child;
+        this.whereExpr = whereExpr;
+        this.subQueryTuples = subQueryTuples;
+        this.subQueryType = true;
+        this.lateralSubSelect = (LateralSubSelect) whereExpr;
     }
 
     public FilterOperator(PhysicalOperator child, Collection<Expression> whereExpr) {
@@ -88,6 +101,20 @@ public class FilterOperator implements PhysicalOperator {
             child.Next();
             Tuple tuple = child.Current();
 
+            // if (this.subQueryType) {
+            // // 如果是子查询类型，检查子查询元组是否为空
+            // if (subQueryTuples == null || subQueryTuples.isEmpty()) {
+            // Logger.debug("FilterOperator子查询元组为空，跳过当前元组");
+            // continue;
+            // }
+            // for (Tuple subTuple : subQueryTuples) {
+            // if (tuple.eval_expr(subTuple)) {
+            // currentTuple = tuple;
+            // readyForNext = true;
+            // return true;
+            // }
+            // }
+            // }
             // 如果元组不为空且满足条件，则设置为当前元组并标记为已准备好
             if (tuple != null && tuple.eval_expr(whereExpr)) {
                 Logger.debug("FilterOperator找到匹配的元组: " + tuple);
@@ -111,7 +138,7 @@ public class FilterOperator implements PhysicalOperator {
     public RID getCurrentRID() {
         if (child instanceof SeqScanOperator) {
             // 如果子操作符是SeqScanOperator，获取当前RID
-            return ((TableTuple)((SeqScanOperator) child).Current()).getRID();
+            return ((TableTuple) ((SeqScanOperator) child).Current()).getRID();
         } else {
             throw new RuntimeException("FilterOperator仅支持SeqScanOperator作为子操作符");
         }

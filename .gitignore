@@ -33,3 +33,6 @@ bin/
 target/
 Project_2_Database_Design.pdf
 CS307-DB/*
+
+.zed/
+Subquery_Implementation_Plan.md
