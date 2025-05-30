@@ -132,7 +132,7 @@ public class BPlusTree {
         boolean found = false;
         int i = 0;
         while (i < curr.keys.size()) {
-            if (key == curr.keys.get(i)) {
+            if (key.equals(curr.keys.get(i))) {
                 found = true;
                 break;
             } else if (key.compareTo(curr.keys.get(i)) < 0) {
@@ -188,7 +188,8 @@ public class BPlusTree {
     }
 
     private void deleteFromLeaf(Value key, Node leaf) {
-        if (key.isValid()) {
+        if (!key.isValid()) {
+            System.out.println("Deleting key: " + key.getType() + key.getValue());
             throw new IllegalArgumentException("Invalid key: " + key);
         }
         leaf.keys.remove(key);
