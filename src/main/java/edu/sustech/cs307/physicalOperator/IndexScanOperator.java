@@ -4,7 +4,6 @@ import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.record.Record;
 import edu.sustech.cs307.tuple.Tuple;
-
 import java.util.ArrayList;
 
 public class IndexScanOperator implements PhysicalOperator {
