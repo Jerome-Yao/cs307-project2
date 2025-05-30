@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.Set;
 
 public class InMemoryOrderedIndex implements Index {
 
@@ -67,6 +69,10 @@ public class InMemoryOrderedIndex implements Index {
         // 获取严格大于value的所有条目视图
         NavigableMap<Value, RID> subMap = indexMap.tailMap(value, false);
         return subMap.entrySet().iterator();
+    }
+
+    public Set<Map.Entry<Value, RID>> getTreeMapEntries() {
+        return indexMap.entrySet();
     }
 
     /**

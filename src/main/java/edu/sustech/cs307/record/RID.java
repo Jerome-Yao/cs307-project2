@@ -13,4 +13,11 @@ public class RID {
         this.pageNum = rid.pageNum;
         this.slotNum = rid.slotNum;
     }
+
+    public String toString() {
+        return "RID{" +
+                "pageNum=" + pageNum +
+                ", slotNum=" + slotNum +
+                '}';
+    }
 }
