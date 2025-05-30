@@ -134,6 +134,13 @@ public class Value implements Comparable<Value> {
         return value;
     }
 
+    public boolean isValid() {
+        return value != null && type != null && 
+               (type == ValueType.INTEGER && value instanceof Long ||
+                type == ValueType.FLOAT && value instanceof Double ||
+                type == ValueType.CHAR && value instanceof String);
+    }
+
     @Override
     public String toString() {
         switch (type) {

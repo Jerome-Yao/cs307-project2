@@ -27,25 +27,30 @@ public class BPlusTree {
     }
 
     public boolean search(Value key) {
-        Node curr = this.root;
-        while (!curr.leaf) {
+        try{
+            Node curr = this.root;
+            while (!curr.leaf) {
+                int i = 0;
+                while (i < curr.keys.size()) {
+                    if (key.compareTo(curr.keys.get(i)) < 0) {
+                        break;
+                    }
+                    i += 1;
+                }
+                curr = curr.values.get(i);
+            }
             int i = 0;
             while (i < curr.keys.size()) {
-                if (key.getValue() < curr.keys.get(i)) {
-                    break;
+                if (curr.keys.get(i) == key) {
+                    return true;
                 }
                 i += 1;
             }
-            curr = curr.values.get(i);
+            return false;
+        } catch (Exception e) {
+            System.err.println("Error during search: " + e.getMessage());
+            return false; // If any exception occurs, we assume the key is not found
         }
-        int i = 0;
-        while (i < curr.keys.size()) {
-            if (curr.keys.get(i) == key) {
-                return true;
-            }
-            i += 1;
-        }
-        return false;
     }
 
     public void insert(Value key) {
@@ -62,23 +67,27 @@ public class BPlusTree {
     }
 
     private void insertNonFull(Node curr, Value key) {
-        int i = 0;
-        while (i < curr.keys.size()) {
-            if (key < curr.keys.get(i)) {
-                break;
-            }
-            i += 1;
-        }
-        if (curr.leaf) {
-            curr.keys.add(i, key);
-        } else {
-            if (curr.values.get(i).keys.size() == 2 * this.degree) {
-                this.split(curr, i, curr.values.get(i));
-                if (key > curr.keys.get(i)) {
-                    i += 1;
+        try {
+            int i = 0;
+            while (i < curr.keys.size()) {
+                if (key.compareTo(curr.keys.get(i)) < 0) {
+                    break;
                 }
+                i += 1;
             }
-            this.insertNonFull(curr.values.get(i), key);
+            if (curr.leaf) {
+                curr.keys.add(i, key);
+            } else {
+                if (curr.values.get(i).keys.size() == 2 * this.degree) {
+                    this.split(curr, i, curr.values.get(i));
+                    if (key.compareTo(curr.keys.get(i)) > 0) {
+                        i += 1;
+                    }
+                }
+                this.insertNonFull(curr.values.get(i), key);
+            }
+        } catch (Exception e) {
+            System.err.println("Error during insert: " + e.getMessage());
         }
     }
 
@@ -126,7 +135,7 @@ public class BPlusTree {
             if (key == curr.keys.get(i)) {
                 found = true;
                 break;
-            } else if (key < curr.keys.get(i)) {
+            } else if (key.compareTo(curr.keys.get(i)) < 0) {
                 break;
             }
             i += 1;
@@ -137,13 +146,13 @@ public class BPlusTree {
             } else {
                 Node pred = curr.values.get(i);
                 if (pred.keys.size() >= this.degree) {
-                    int predKey = this.getMaxKey(pred);
+                    Value predKey = this.getMaxKey(pred);
                     curr.keys.set(i, predKey);
                     this.deleteFromLeaf(predKey, pred);
                 } else {
                     Node succ = curr.values.get(i + 1);
                     if (succ.keys.size() >= this.degree) {
-                        int succKey = this.getMinKey(succ);
+                        Value succKey = this.getMinKey(succ);
                         curr.keys.set(i, succKey);
                         this.deleteFromLeaf(succKey, succ);
                     } else {
@@ -179,7 +188,10 @@ public class BPlusTree {
     }
 
     private void deleteFromLeaf(Value key, Node leaf) {
-        leaf.keys.remove(Integer.valueOf(key));
+        if (key.isValid()) {
+            throw new IllegalArgumentException("Invalid key: " + key);
+        }
+        leaf.keys.remove(key);
 
         if (leaf == this.root || leaf.keys.size() >= Math.floor(this.degree / 2)) {
             return;
@@ -200,14 +212,14 @@ public class BPlusTree {
         }
     }
 
-    private int getMinKey(Node node) {
+    private Value getMinKey(Node node) {
         while (!node.leaf) {
             node = node.values.get(0);
         }
         return node.keys.get(0);
     }
 
-    private int getMaxKey(Node node) {
+    private Value getMaxKey(Node node) {
         while (!node.leaf) {
             node = node.values.get(node.values.size() - 1);
         }
@@ -221,7 +233,7 @@ public class BPlusTree {
             while (i < curr.values.size()) {
                 if (child == curr.values.get(i)) {
                     return curr;
-                } else if (child.keys.get(0) < curr.values.get(i).keys.get(0)) {
+                } else if (child.keys.get(0).compareTo(curr.values.get(i).keys.get(0)) < 0) {
                     break;
                 }
                 i += 1;
@@ -287,21 +299,18 @@ public class BPlusTree {
         BPlusTree tree = new BPlusTree(3);
 
         // insert some keys
-        tree.insert(1);
-        tree.insert(2);
-        tree.insert(3);
-        tree.insert(4);
-        tree.insert(5);
-        tree.insert(6);
-        tree.insert(7);
-        tree.insert(8);
-        tree.insert(9);
-
-        // print the tree
-        tree.printTree(); // [4] [2, 3] [6, 7, 8, 9] [1] [5]
-
+        tree.insert(new Value(1L));  // 使用 Value 的构造函数
+        tree.insert(new Value(2L));
+        tree.insert(new Value(3L));
+        tree.insert(new Value(4L));
+        tree.insert(new Value(5L));
+        tree.insert(new Value(6L));
+        tree.insert(new Value(7L));
+        tree.insert(new Value(8L));
+        tree.insert(new Value(9L));
+        tree.printTree();
         // delete a key
-        tree.delete(3);
+        tree.delete(new Value(3L)); // 删除键 3
 
         // print the tree
         tree.printTree(); // [4] [2] [6, 7, 8, 9] [1] [5]
