@@ -516,6 +516,7 @@ public class BPlusTree {
         tree.delete(new Value(3L));
         System.out.println("删除后的树结构:");
         tree.printTree();
+        System.out.println("搜索键 3: " + tree.search(new Value(3L)));
         
         // 验证树的完整性
         System.out.println("\n树的完整性验证: " + tree.validate());
