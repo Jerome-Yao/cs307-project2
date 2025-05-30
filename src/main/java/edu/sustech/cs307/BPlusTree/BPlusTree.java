@@ -28,20 +28,20 @@ public class BPlusTree {
 
     public boolean search(Value key) {
         try{
-            Node curr = this.root;
-            while (!curr.leaf) {
+            Node currentNode = this.root;
+            while (!currentNode.leaf) {
                 int i = 0;
-                while (i < curr.keys.size()) {
-                    if (key.compareTo(curr.keys.get(i)) < 0) {
+                while (i < currentNode.keys.size()) {
+                    if (key.compareTo(currentNode.keys.get(i)) < 0) {
                         break;
                     }
                     i += 1;
                 }
-                curr = curr.values.get(i);
+                currentNode = currentNode.values.get(i);
             }
             int i = 0;
-            while (i < curr.keys.size()) {
-                if (curr.keys.get(i) == key) {
+            while (i < currentNode.keys.size()) {
+                if (currentNode.keys.get(i).equals(key) ) {
                     return true;
                 }
                 i += 1;
@@ -54,37 +54,37 @@ public class BPlusTree {
     }
 
     public void insert(Value key) {
-        Node curr = this.root;
-        if (curr.keys.size() == 2 * this.degree) {
+        Node currentNode = this.root;
+        if (currentNode.keys.size() == 2 * this.degree) {
             Node newRoot = new Node(false);
             this.root = newRoot;
-            newRoot.values.add(curr);
-            this.split(newRoot, 0, curr);
+            newRoot.values.add(currentNode);
+            this.split(newRoot, 0, currentNode);
             this.insertNonFull(newRoot, key);
         } else {
-            this.insertNonFull(curr, key);
+            this.insertNonFull(currentNode, key);
         }
     }
 
-    private void insertNonFull(Node curr, Value key) {
+    private void insertNonFull(Node currentNode, Value key) {
         try {
             int i = 0;
-            while (i < curr.keys.size()) {
-                if (key.compareTo(curr.keys.get(i)) < 0) {
+            while (i < currentNode.keys.size()) {
+                if (key.compareTo(currentNode.keys.get(i)) < 0) {
                     break;
                 }
                 i += 1;
             }
-            if (curr.leaf) {
-                curr.keys.add(i, key);
+            if (currentNode.leaf) {
+                currentNode.keys.add(i, key);
             } else {
-                if (curr.values.get(i).keys.size() == 2 * this.degree) {
-                    this.split(curr, i, curr.values.get(i));
-                    if (key.compareTo(curr.keys.get(i)) > 0) {
+                if (currentNode.values.get(i).keys.size() == 2 * this.degree) {
+                    this.split(currentNode, i, currentNode.values.get(i));
+                    if (key.compareTo(currentNode.keys.get(i)) > 0) {
                         i += 1;
                     }
                 }
-                this.insertNonFull(curr.values.get(i), key);
+                this.insertNonFull(currentNode.values.get(i), key);
             }
         } catch (Exception e) {
             System.err.println("Error during insert: " + e.getMessage());
@@ -128,57 +128,57 @@ public class BPlusTree {
     }
 
     public void delete(Value key) {
-        Node curr = this.root;
+        Node currentNode = this.root;
         boolean found = false;
         int i = 0;
-        while (i < curr.keys.size()) {
-            if (key.equals(curr.keys.get(i))) {
+        while (i < currentNode.keys.size()) {
+            if (key.equals(currentNode.keys.get(i))) {
                 found = true;
                 break;
-            } else if (key.compareTo(curr.keys.get(i)) < 0) {
+            } else if (key.compareTo(currentNode.keys.get(i)) < 0) {
                 break;
             }
             i += 1;
         }
         if (found) {
-            if (curr.leaf) {
-                curr.keys.remove(i);
+            if (currentNode.leaf) {
+                currentNode.keys.remove(i);
             } else {
-                Node pred = curr.values.get(i);
+                Node pred = currentNode.values.get(i);
                 if (pred.keys.size() >= this.degree) {
                     Value predKey = this.getMaxKey(pred);
-                    curr.keys.set(i, predKey);
+                    currentNode.keys.set(i, predKey);
                     this.deleteFromLeaf(predKey, pred);
                 } else {
-                    Node succ = curr.values.get(i + 1);
+                    Node succ = currentNode.values.get(i + 1);
                     if (succ.keys.size() >= this.degree) {
                         Value succKey = this.getMinKey(succ);
-                        curr.keys.set(i, succKey);
+                        currentNode.keys.set(i, succKey);
                         this.deleteFromLeaf(succKey, succ);
                     } else {
-                        this.merge(curr, i, pred, succ);
+                        this.merge(currentNode, i, pred, succ);
                         this.deleteFromLeaf(key, pred);
                     }
                 }
 
-                if (curr == this.root && curr.keys.size() == 0) {
-                    this.root = curr.values.get(0);
+                if (currentNode == this.root && currentNode.keys.size() == 0) {
+                    this.root = currentNode.values.get(0);
                 }
             }
         } else {
-            if (curr.leaf) {
+            if (currentNode.leaf) {
                 return;
             } else {
-                if (curr.values.get(i).keys.size() < this.degree) {
-                    if (i != 0 && curr.values.get(i - 1).keys.size() >= this.degree) {
-                        this.stealFromLeft(curr, i);
-                    } else if (i != curr.keys.size() && curr.values.get(i + 1).keys.size() >= this.degree) {
-                        this.stealFromRight(curr, i);
+                if (currentNode.values.get(i).keys.size() < this.degree) {
+                    if (i != 0 && currentNode.values.get(i - 1).keys.size() >= this.degree) {
+                        this.stealFromLeft(currentNode, i);
+                    } else if (i != currentNode.keys.size() && currentNode.values.get(i + 1).keys.size() >= this.degree) {
+                        this.stealFromRight(currentNode, i);
                     } else {
-                        if (i == curr.keys.size()) {
+                        if (i == currentNode.keys.size()) {
                             i -= 1;
                         }
-                        this.merge(curr, i, curr.values.get(i), curr.values.get(i + 1));
+                        this.merge(currentNode, i, currentNode.values.get(i), currentNode.values.get(i + 1));
                     }
                 }
 
@@ -228,18 +228,18 @@ public class BPlusTree {
     }
 
     private Node findParent(Node child) {
-        Node curr = this.root;
-        while (!curr.leaf) {
+        Node currentNode = this.root;
+        while (!currentNode.leaf) {
             int i = 0;
-            while (i < curr.values.size()) {
-                if (child == curr.values.get(i)) {
-                    return curr;
-                } else if (child.keys.get(0).compareTo(curr.values.get(i).keys.get(0)) < 0) {
+            while (i < currentNode.values.size()) {
+                if (child == currentNode.values.get(i)) {
+                    return currentNode;
+                } else if (child.keys.get(0).compareTo(currentNode.values.get(i).keys.get(0)) < 0) {
                     break;
                 }
                 i += 1;
             }
-            curr = curr.values.get(i);
+            currentNode = currentNode.values.get(i);
         }
         return null;
     }
@@ -276,13 +276,13 @@ public class BPlusTree {
     }
 
     public void printTree() {
-        List<Node> currLevel = new ArrayList<>();
-        currLevel.add(this.root);
+        List<Node> currentNodeLevel = new ArrayList<>();
+        currentNodeLevel.add(this.root);
 
-        while (!currLevel.isEmpty()) {
+        while (!currentNodeLevel.isEmpty()) {
             List<Node> nextLevel = new ArrayList<>();
 
-            for (Node node : currLevel) {
+            for (Node node : currentNodeLevel) {
                 System.out.print("[" + String.join(", ", node.keys.stream().map(String::valueOf).toArray(String[]::new)) + "] ");
 
                 if (!node.leaf) {
@@ -291,7 +291,7 @@ public class BPlusTree {
             }
 
             System.out.println();
-            currLevel = nextLevel;
+            currentNodeLevel = nextLevel;
         }
     }
 
