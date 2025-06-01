@@ -11,6 +11,7 @@ public class LogicalFilterOperator extends LogicalOperator {
     private final Expression condition;
     private final LogicalOperator child;
     private List<Tuple> subQueryTuples = null;
+    private boolean not = false;
 
     public LogicalFilterOperator(LogicalOperator child, Expression condition) {
         super(Collections.singletonList(child));
@@ -21,11 +22,12 @@ public class LogicalFilterOperator extends LogicalOperator {
     public LogicalFilterOperator(
             LogicalOperator child,
             Expression condition,
-            List<Tuple> subQueryTuples) {
+            List<Tuple> subQueryTuples, boolean not) {
         super(Collections.singletonList(child));
         this.child = child;
         this.condition = condition;
         this.subQueryTuples = subQueryTuples;
+        this.not = not;
     }
 
     public LogicalOperator getChild() {
@@ -38,6 +40,10 @@ public class LogicalFilterOperator extends LogicalOperator {
 
     public List<Tuple> getSubQueryTuples() {
         return subQueryTuples;
+    }
+
+    public boolean isNot() {
+        return not;
     }
 
     @Override

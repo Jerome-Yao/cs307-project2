@@ -17,25 +17,25 @@ import org.pmw.tinylog.Logger;
 public class FilterOperator implements PhysicalOperator {
     private PhysicalOperator child;
     private Expression whereExpr;
-    private LateralSubSelect lateralSubSelect;
     private Tuple currentTuple;
     private boolean isOpen = false;
     // 标记是否已经准备好下一个元组
     private boolean readyForNext = false;
     private List<Tuple> subQueryTuples = null; // 用于存储子查询的结果
     private boolean subQueryType = false; // 用于标记是否是子查询类型
+    private boolean not = true;
 
     public FilterOperator(PhysicalOperator child, Expression whereExpr) {
         this.child = child;
         this.whereExpr = whereExpr;
     }
 
-    public FilterOperator(PhysicalOperator child, Expression whereExpr, List<Tuple> subQueryTuples) {
+    public FilterOperator(PhysicalOperator child, Expression whereExpr, List<Tuple> subQueryTuples, boolean not) {
         this.child = child;
         this.whereExpr = whereExpr;
         this.subQueryTuples = subQueryTuples;
         this.subQueryType = true;
-        this.lateralSubSelect = (LateralSubSelect) whereExpr;
+        this.not = not;
     }
 
     public FilterOperator(PhysicalOperator child, Collection<Expression> whereExpr) {
@@ -101,22 +101,35 @@ public class FilterOperator implements PhysicalOperator {
             child.Next();
             Tuple tuple = child.Current();
 
-            // if (this.subQueryType) {
-            // // 如果是子查询类型，检查子查询元组是否为空
-            // if (subQueryTuples == null || subQueryTuples.isEmpty()) {
-            // Logger.debug("FilterOperator子查询元组为空，跳过当前元组");
-            // continue;
-            // }
-            // for (Tuple subTuple : subQueryTuples) {
-            // if (tuple.eval_expr(subTuple)) {
-            // currentTuple = tuple;
-            // readyForNext = true;
-            // return true;
-            // }
-            // }
-            // }
-            // 如果元组不为空且满足条件，则设置为当前元组并标记为已准备好
-            if (tuple != null && tuple.eval_expr(whereExpr)) {
+            if (this.subQueryType) {
+                // 如果是子查询类型，检查子查询元组是否为空
+                if (subQueryTuples == null || subQueryTuples.isEmpty()) {
+                    Logger.debug("FilterOperator子查询元组为空，跳过当前元组");
+                    continue;
+                }
+                if (not) {
+                    boolean found = false;
+                    for (Tuple subTuple : subQueryTuples) {
+                        if (tuple.evaluateSingleTuple(subTuple)) {
+                            found = true;
+                        }
+                    }
+                    if (found) {
+                        continue; // get next
+                    } else {
+                        currentTuple = tuple;
+                        readyForNext = true;
+                        return true;
+                    }
+                }
+                for (Tuple subTuple : subQueryTuples) {
+                    if (tuple.evaluateSingleTuple(subTuple)) {
+                        currentTuple = tuple;
+                        readyForNext = true;
+                        return true;
+                    }
+                }
+            } else if (tuple != null && tuple.eval_expr(whereExpr)) {
                 Logger.debug("FilterOperator找到匹配的元组: " + tuple);
                 currentTuple = tuple;
                 readyForNext = true;

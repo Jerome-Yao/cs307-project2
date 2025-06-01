@@ -77,7 +77,8 @@ public class PhysicalPlanner {
         PhysicalOperator inputOp = generateOperator(dbManager, logicalFilterOp.getChild());
         if (logicalFilterOp.getSubQueryTuples() != null) {
             // If subquery tuples are provided, use them to filter
-            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr(), logicalFilterOp.getSubQueryTuples());
+            return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr(), logicalFilterOp.getSubQueryTuples(),
+                    logicalFilterOp.isNot());
 
         } else {
             return new FilterOperator(inputOp, logicalFilterOp.getWhereExpr());
