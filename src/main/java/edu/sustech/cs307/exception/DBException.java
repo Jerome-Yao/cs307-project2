@@ -6,4 +6,8 @@ public class DBException extends Exception {
                 "%s: %s", exceptionType.name(), exceptionType.GetErrorResult()
         ));
     }
+
+    public DBException(String message) {
+        super(message);
+    }
 }

@@ -43,4 +43,8 @@ public class ColumnMeta {
     public int getOffset() {
         return offset;
     }
+
+    public String getName() {
+        return name;
+    }
 }

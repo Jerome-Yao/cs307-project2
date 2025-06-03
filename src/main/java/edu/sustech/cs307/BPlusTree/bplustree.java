@@ -1,4 +1,4 @@
-import java.lang.*;
+package edu.sustech.cs307.BPlusTree;
 import java.util.*;
 import java.io.*;
 
@@ -1108,6 +1108,7 @@ public class bplustree {
 
 			// Close output file
 			logger.close();
+			sc.close();
 
 		} catch (FileNotFoundException e) {
 			System.err.println(e);
