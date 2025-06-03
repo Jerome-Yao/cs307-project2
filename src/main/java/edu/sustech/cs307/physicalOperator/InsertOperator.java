@@ -69,21 +69,6 @@ public class InsertOperator implements PhysicalOperator {
                             }
 //                            System.out.println("2222222222222222222222222222222");
                             System.out.println("indexName: "+indexName);
-                            // 假设索引名对应列名，找到对应列的值
-                            // int columnIndex = getColumnIndex(indexName);
-                            // if (columnIndex != -1) {
-                            //     Value value = values.get(columnIndex);
-                            //     if (value.getValue() instanceof Comparable) {
-                            //         BPlusTree<?> bPlusTree = tableMeta.getIndexBPlusTree(indexName);
-                            //         if (bPlusTree != null) {
-                            //             // 类型转换并插入索引
-                            //             @SuppressWarnings("unchecked")
-                            //             BPlusTree<Comparable<?>> tree = (BPlusTree<Comparable<?>>) bPlusTree;
-                            //             tree.insert((Comparable<?>) value.getValue());
-                            //         }
-                            //     }
-                            // }
-                            // System.out.println(rid);
                             BPlusTree tree = tableMeta.getBTreeIndex(indexName);
                             // System.out.println(rid);
                             // if (tree == null) {
