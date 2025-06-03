@@ -19,11 +19,53 @@ public class BPlusTree {
         this.root = new BPlusTreeLeafNode(degree);
     }
     
+    // 安全的值比较方法
+    private int safeCompare(Value v1, Value v2) {
+        try {
+            return v1.compareTo(v2);
+        } catch (ClassCastException e) {
+            // 如果类型不匹配，抛出更友好的异常
+            throw new IllegalArgumentException("无法比较不同类型的值: " + 
+                v1.getClass().getSimpleName() + " 和 " + v2.getClass().getSimpleName());
+        } catch (Exception e) {
+            throw new RuntimeException("值比较时发生错误: " + e.getMessage(), e);
+        }
+    }
+    
+    // 验证键类型一致性
+    private void validateKeyType(Value newKey) {
+        if (root.isLeaf()) {
+            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) root;
+            if (!leaf.getKeys().isEmpty()) {
+                Value existingKey = leaf.getKeys().get(0);
+                if (!isSameType(newKey, existingKey)) {
+                    throw new IllegalArgumentException("插入的键类型与现有键类型不匹配: " +
+                        "新键类型=" + getValueType(newKey) + ", 现有键类型=" + getValueType(existingKey));
+                }
+            }
+        }
+    }
+    
+    // 检查两个值是否为同一类型
+    private boolean isSameType(Value v1, Value v2) {
+        return getValueType(v1).equals(getValueType(v2));
+    }
+    
+    // 获取值的类型字符串
+    private String getValueType(Value value) {
+        if (value == null) return "null";
+        Object val = value.getValue();
+        if (val == null) return "null";
+        return val.getClass().getSimpleName();
+    }
+    
     public void insert(Value key, RID rid) {
         try {
+            // 验证键类型
+            validateKeyType(key);
+            
             BPlusTreeNode leaf = findLeaf(key);
             leaf.insert(key, rid);
-            
             if (leaf.isNeedSplit()) {
                 splitAndPropagate(leaf);
             }
@@ -38,50 +80,31 @@ public class BPlusTree {
         
         while (!current.isLeaf()) {
             BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
-            // if (key.compareTo(new Value(5L)) == 0) {
-            //     System.out.println(internal.getKeys());
-            // }
-            current = internal.findChild(key); //第一个大于等于key的子节点
+            current = internal.findChild(key);
         }
         
         return current;
     }
     
     private void splitAndPropagate(BPlusTreeNode node) {
-        // if(!node.isLeaf())System.out.println("---------------分裂前节点: " + node.getKeys());
-        // if(!node.isLeaf())System.out.println("---------------分裂后节点: " + newNode.getKeys());
         Value keyToPromote;
         BPlusTreeNode newNode = node.split();
         if (node.isLeaf()) {
-            // System.out.println("---------------分裂前节点: " + node.getKeys());
-            // newNode = node.split();
-            // System.out.println("---------------分裂后节点: " + newNode.getKeys());
-            // 叶子节点分裂：提升的键是新节点的第一个键
             keyToPromote = newNode.getFirstKey();
         } else {
-            // newNode = node.split();
             keyToPromote = node.getLastKey();
-            node.removeLastKey(); // 从原节点移除提升的键
-            // 内部节点分裂：提升的键是中间键，需要从原节点移除
-            // BPlusTreeInternalNode internalNode = (BPlusTreeInternalNode) node;
-            // System.out.println("---------------分裂内部节点，提升键: " + internalNode.getKeys());
-            // keyToPromote = internalNode.getPromotedKey(); // 需要实现这个方法
-            // internalNode.getKeys().remove(keyToPromote);
+            node.removeLastKey();
         }
         if (node == root) {
-            // System.out.println("分裂根节点，提升键: " + keyToPromote);
-            // 创建新根节点
             BPlusTreeInternalNode newRoot = new BPlusTreeInternalNode(degree);
             newRoot.getChildren().add(node);
             newRoot.getKeys().add(keyToPromote);
             newRoot.getChildren().add(newNode);
             
-            // 设置父子关系
             node.setParent(newRoot);
             newNode.setParent(newRoot);
             root = newRoot;
         } else {
-            // 将新节点和提升的键插入到父节点
             BPlusTreeInternalNode parent = (BPlusTreeInternalNode) node.getParent();
             newNode.setParent(parent);
             parent.insertChild(keyToPromote, newNode);
@@ -120,6 +143,11 @@ public class BPlusTree {
     
     public List<RID> rangeSearch(Value startKey, Value endKey) {
         try {
+            // 验证范围键类型一致性
+            if (!isSameType(startKey, endKey)) {
+                throw new IllegalArgumentException("范围查询的起始键和结束键类型不匹配");
+            }
+            
             BPlusTreeLeafNode startLeaf = (BPlusTreeLeafNode) findLeaf(startKey);
             return startLeaf.rangeSearch(startKey, endKey);
         } catch (Exception e) {
@@ -228,6 +256,34 @@ public class BPlusTree {
         }
     }
     
+    // 安全的值转字符串方法
+    private String safeValueToString(Value value) {
+        if (value == null) return "null";
+        try {
+            Object val = value.getValue();
+            if (val == null) return "null";
+            if (val instanceof String) {
+                return "\"" + val + "\""; // 字符串加引号
+            } else if (val instanceof Double) {
+                return String.format("%.2f", (Double) val); // 格式化双精度数
+            } else {
+                return val.toString();
+            }
+        } catch (Exception e) {
+            return "[Error: " + e.getMessage() + "]";
+        }
+    }
+    
+    // 安全的RID转字符串方法
+    private String safeRIDToString(RID rid) {
+        if (rid == null) return "null";
+        try {
+            return rid.toString();
+        } catch (Exception e) {
+            return "[RID Error: " + e.getMessage() + "]";
+        }
+    }
+    
     // 打印树结构
     public void printTree() {
         if (root == null) {
@@ -235,71 +291,82 @@ public class BPlusTree {
             return;
         }
         
-        System.out.println("\n=== B+树结构 ===");
-        List<List<BPlusTreeNode>> levels = new ArrayList<>();
-        List<BPlusTreeNode> currentLevel = new ArrayList<>();
-        currentLevel.add(root);
-        
-        while (!currentLevel.isEmpty()) {
-            levels.add(new ArrayList<>(currentLevel));
-            List<BPlusTreeNode> nextLevel = new ArrayList<>();
+        try {
+            System.out.println("\n=== B+树结构 ===");
+            List<List<BPlusTreeNode>> levels = new ArrayList<>();
+            List<BPlusTreeNode> currentLevel = new ArrayList<>();
+            currentLevel.add(root);
             
-            for (BPlusTreeNode node : currentLevel) {
-                if (!node.isLeaf()) {
-                    BPlusTreeInternalNode internal = (BPlusTreeInternalNode) node;
-                    nextLevel.addAll(internal.getChildren());
-                }
-            }
-            currentLevel = nextLevel;
-        }
-        
-        for (int i = 0; i < levels.size(); i++) {
-            System.out.print("Level " + i + ": ");
-            for (BPlusTreeNode node : levels.get(i)) {
-                if (node.isLeaf()) {
-                    BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) node;
-                    System.out.print("[");
-                    for (int j = 0; j < leaf.getKeys().size(); j++) {
-                        System.out.print(leaf.getKeys().get(j) + ":" + leaf.getValues().get(j));
-                        if (j < leaf.getKeys().size() - 1) System.out.print(", ");
+            while (!currentLevel.isEmpty()) {
+                levels.add(new ArrayList<>(currentLevel));
+                List<BPlusTreeNode> nextLevel = new ArrayList<>();
+                
+                for (BPlusTreeNode node : currentLevel) {
+                    if (!node.isLeaf()) {
+                        BPlusTreeInternalNode internal = (BPlusTreeInternalNode) node;
+                        nextLevel.addAll(internal.getChildren());
                     }
-                    System.out.print("] ");
-                } else {
-                    System.out.print("[");
-                    for (int j = 0; j < node.getKeys().size(); j++) {
-                        System.out.print(node.getKeys().get(j));
-                        if (j < node.getKeys().size() - 1) System.out.print(", ");
-                    }
-                    System.out.print("] ");
                 }
+                currentLevel = nextLevel;
             }
-            System.out.println();
+            
+            for (int i = 0; i < levels.size(); i++) {
+                System.out.print("Level " + i + ": ");
+                for (BPlusTreeNode node : levels.get(i)) {
+                    if (node.isLeaf()) {
+                        BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) node;
+                        System.out.print("[");
+                        for (int j = 0; j < leaf.getKeys().size(); j++) {
+                            System.out.print(safeValueToString(leaf.getKeys().get(j)) + ":" + 
+                                safeRIDToString(leaf.getValues().get(j)));
+                            if (j < leaf.getKeys().size() - 1) System.out.print(", ");
+                        }
+                        System.out.print("] ");
+                    } else {
+                        System.out.print("[");
+                        for (int j = 0; j < node.getKeys().size(); j++) {
+                            System.out.print(safeValueToString(node.getKeys().get(j)));
+                            if (j < node.getKeys().size() - 1) System.out.print(", ");
+                        }
+                        System.out.print("] ");
+                    }
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            System.err.println("Error during printTree: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
     // 打印叶子节点链表
     public void printLeafChain() {
-        BPlusTreeNode current = root;
-        while (!current.isLeaf()) {
-            BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
-            current = internal.getChildren().get(0);
-        }
-        
-        System.out.print("\n叶子节点链表: ");
-        BPlusTreeLeafNode leafCurrent = (BPlusTreeLeafNode) current;
-        while (leafCurrent != null) {
-            System.out.print("[");
-            for (int i = 0; i < leafCurrent.getKeys().size(); i++) {
-                System.out.print(leafCurrent.getKeys().get(i));
-                if (i < leafCurrent.getKeys().size() - 1) System.out.print(", ");
+        try {
+            BPlusTreeNode current = root;
+            while (!current.isLeaf()) {
+                BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
+                current = internal.getChildren().get(0);
             }
-            System.out.print("]");
-            if (leafCurrent.getNext() != null) {
-                System.out.print(" -> ");
+            
+            System.out.print("\n叶子节点链表: ");
+            BPlusTreeLeafNode leafCurrent = (BPlusTreeLeafNode) current;
+            while (leafCurrent != null) {
+                System.out.print("[");
+                for (int i = 0; i < leafCurrent.getKeys().size(); i++) {
+                    System.out.print(safeValueToString(leafCurrent.getKeys().get(i)));
+                    if (i < leafCurrent.getKeys().size() - 1) System.out.print(", ");
+                }
+                System.out.print("]");
+                if (leafCurrent.getNext() != null) {
+                    System.out.print(" -> ");
+                }
+                leafCurrent = leafCurrent.getNext();
             }
-            leafCurrent = leafCurrent.getNext();
+            System.out.println();
+        } catch (Exception e) {
+            System.err.println("Error during printLeafChain: " + e.getMessage());
+            e.printStackTrace();
         }
-        System.out.println();
     }
     
     // 改进的验证方法
@@ -316,120 +383,128 @@ public class BPlusTree {
     private boolean validateNode(BPlusTreeNode node, Value minKey, Value maxKey) {
         if (node == null) return true;
         
-        // 检查键的顺序
-        for (int i = 0; i < node.getKeys().size() - 1; i++) {
-            if (node.getKeys().get(i).compareTo(node.getKeys().get(i + 1)) >= 0) {
-                System.out.println("键顺序错误在节点中: " + node.getKeys().get(i) + " >= " + node.getKeys().get(i + 1));
-                return false;
-            }
-        }
-        if (maxKey != null){
-            System.out.println("键顺序正确在节点中: " + node.getKeys());
-        }
-        // 检查键的范围
-        for (Value key : node.getKeys()) {
-            if (minKey != null && key.compareTo(minKey) < 0) {
-                System.out.println("键 " + key + " 小于最小值 " + minKey);
-                return false;
-            }
-            if (maxKey != null && key.compareTo(maxKey) > 0) {
-                // System.out.println("fffffffffffffffffffffffffffffffffff");
-                // System.out.println(maxKey == null ? "最大值未定义" : "键 " + key + " 大于等于最大值 " + maxKey);
-                System.out.println("键 " + key + " 大于等于最大值 " + maxKey);
-                return false;
-            }
-        }
-        
-        if (!node.isLeaf()) {
-            BPlusTreeInternalNode internal = (BPlusTreeInternalNode) node;
-            
-            // 检查子节点数量：应该比键的数量多1
-            if (internal.getChildren().size() != node.getKeys().size() + 1) {
-                System.out.println("内部节点子节点数量错误: keys=" + node.getKeys().size() + 
-                    ", children=" + internal.getChildren().size());
-                return false;
-            }
-            
-            // 检查父子关系
-            for (BPlusTreeNode child : internal.getChildren()) {
-                if (child.getParent() != node) {
-                    System.out.println("父子关系错误");
+        try {
+            // 检查键的顺序
+            for (int i = 0; i < node.getKeys().size() - 1; i++) {
+                if (safeCompare(node.getKeys().get(i), node.getKeys().get(i + 1)) >= 0) {
+                    System.out.println("键顺序错误在节点中: " + safeValueToString(node.getKeys().get(i)) + 
+                        " >= " + safeValueToString(node.getKeys().get(i + 1)));
                     return false;
                 }
             }
             
-            // 递归检查子节点，传递正确的范围
-            List<BPlusTreeNode> children = internal.getChildren();
-            List<Value> keys = node.getKeys();
-            
-            // 第一个子节点
-            if (!validateNode(children.get(0), minKey, keys.size() > 0 ? keys.get(0) : null)) {
-                return false;
-            }
-            
-            // 中间子节点
-            for (int i = 1; i < children.size() - 1; i++) {
-                if (!validateNode(children.get(i), keys.get(i - 1), keys.get(i))) {
+            // 检查键的范围
+            for (Value key : node.getKeys()) {
+                if (minKey != null && safeCompare(key, minKey) < 0) {
+                    System.out.println("键 " + safeValueToString(key) + " 小于最小值 " + safeValueToString(minKey));
+                    return false;
+                }
+                if (maxKey != null && safeCompare(key, maxKey) > 0) {
+                    System.out.println("键 " + safeValueToString(key) + " 大于等于最大值 " + safeValueToString(maxKey));
                     return false;
                 }
             }
             
-            // 最后一个子节点
-            if (children.size() > 1) {
-                if (!validateNode(children.get(children.size() - 1), 
-                    keys.size() > 0 ? keys.get(keys.size() - 1) : null, maxKey)) {
+            if (!node.isLeaf()) {
+                BPlusTreeInternalNode internal = (BPlusTreeInternalNode) node;
+                
+                // 检查子节点数量：应该比键的数量多1
+                if (internal.getChildren().size() != node.getKeys().size() + 1) {
+                    System.out.println("内部节点子节点数量错误: keys=" + node.getKeys().size() + 
+                        ", children=" + internal.getChildren().size());
+                    return false;
+                }
+                
+                // 检查父子关系
+                for (BPlusTreeNode child : internal.getChildren()) {
+                    if (child.getParent() != node) {
+                        System.out.println("父子关系错误");
+                        return false;
+                    }
+                }
+                
+                // 递归检查子节点，传递正确的范围
+                List<BPlusTreeNode> children = internal.getChildren();
+                List<Value> keys = node.getKeys();
+                
+                // 第一个子节点
+                if (!validateNode(children.get(0), minKey, keys.size() > 0 ? keys.get(0) : null)) {
+                    return false;
+                }
+                
+                // 中间子节点
+                for (int i = 1; i < children.size() - 1; i++) {
+                    if (!validateNode(children.get(i), keys.get(i - 1), keys.get(i))) {
+                        return false;
+                    }
+                }
+                
+                // 最后一个子节点
+                if (children.size() > 1) {
+                    if (!validateNode(children.get(children.size() - 1), 
+                        keys.size() > 0 ? keys.get(keys.size() - 1) : null, maxKey)) {
+                        return false;
+                    }
+                }
+            } else {
+                BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) node;
+                // 叶子节点：检查键值对数量
+                if (node.getKeys().size() != leaf.getValues().size()) {
+                    System.out.println("叶子节点键值数量不匹配: keys=" + node.getKeys().size() + 
+                        ", values=" + leaf.getValues().size());
                     return false;
                 }
             }
-        } else {
-            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) node;
-            // 叶子节点：检查键值对数量
-            if (node.getKeys().size() != leaf.getValues().size()) {
-                System.out.println("叶子节点键值数量不匹配: keys=" + node.getKeys().size() + 
-                    ", values=" + leaf.getValues().size());
-                return false;
-            }
+            
+            return true;
+        } catch (Exception e) {
+            System.out.println("验证节点时出现异常: " + e.getMessage());
+            return false;
         }
-        
-        return true;
     }
     
     private boolean validateLeafChain() {
-        if (root.isLeaf()) {
-            // 检查叶子节点的父节点是否为null（只有一个叶子节点的情况）
-            if (root.getParent() != null) {
-                System.out.println("只有一个叶子节点时，父节点应为null");
-                return false;
-            }
-            return true; // 只有一个叶子节点
-        }
-        
-        // 找到最左边的叶子节点
-        BPlusTreeNode current = root;
-        while (!current.isLeaf()) {
-            BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
-            if (internal.getChildren().isEmpty()) {
-                System.out.println("内部节点没有子节点");
-                return false;
-            }
-            current = internal.getChildren().get(0);
-        }
-        
-        // 检查叶子链表的顺序
-        Value lastKey = null;
-        BPlusTreeLeafNode leafCurrent = (BPlusTreeLeafNode) current;
-        while (leafCurrent != null) {
-            for (Value key : leafCurrent.getKeys()) {
-                if (lastKey != null && key.compareTo(lastKey) <= 0) {
-                    System.out.println("叶子链表顺序错误: " + lastKey + " >= " + key);
+        try {
+            if (root.isLeaf()) {
+                // 检查叶子节点的父节点是否为null（只有一个叶子节点的情况）
+                if (root.getParent() != null) {
+                    System.out.println("只有一个叶子节点时，父节点应为null");
                     return false;
                 }
-                lastKey = key;
+                return true; // 只有一个叶子节点
             }
-            leafCurrent = leafCurrent.getNext();
+            
+            // 找到最左边的叶子节点
+            BPlusTreeNode current = root;
+            while (!current.isLeaf()) {
+                BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
+                if (internal.getChildren().isEmpty()) {
+                    System.out.println("内部节点没有子节点");
+                    return false;
+                }
+                current = internal.getChildren().get(0);
+            }
+            
+            // 检查叶子链表的顺序
+            Value lastKey = null;
+            BPlusTreeLeafNode leafCurrent = (BPlusTreeLeafNode) current;
+            while (leafCurrent != null) {
+                for (Value key : leafCurrent.getKeys()) {
+                    if (lastKey != null && safeCompare(key, lastKey) <= 0) {
+                        System.out.println("叶子链表顺序错误: " + safeValueToString(lastKey) + 
+                            " >= " + safeValueToString(key));
+                        return false;
+                    }
+                    lastKey = key;
+                }
+                leafCurrent = leafCurrent.getNext();
+            }
+            
+            return true;
+        } catch (Exception e) {
+            System.out.println("验证叶子链表时出现异常: " + e.getMessage());
+            return false;
         }
-        
-        return true;
     }
     
     public BPlusTreeNode getRoot() {
@@ -437,69 +512,64 @@ public class BPlusTree {
     }
     
     // 测试主方法
-     public static void main(String[] args) {
-         System.out.println("=== B+树测试程序 ===");
+    public static void main(String[] args) {
+        System.out.println("=== B+树测试程序 ===");
         
-         // 创建一个度数为4的B+树
-         BPlusTree tree = new BPlusTree(3);
+        try {
+            // 创建一个度数为3的B+树
+            BPlusTree tree = new BPlusTree(3);
 
-         // 插入测试数据
-         //System.out.println("\n1. 插入键 1-10...");
-         for (int i = 1; i <= 5; i++) {
- //            System.out.println("插入键 " + i + " 前验证: " + tree.validate());
-             tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-             // tree.printTree();
-             // tree.printLeafChain();
-             // System.out.println("-------------------------------------------------");
- //            System.out.println("插入键 " + i + " 后验证: " + tree.validate());
-             // if (!tree.validate()) {
-             //     System.out.println("插入键 " + i + " 后验证失败，停止测试");
-             //     break;
-             // }
-         }
-//         for (int i=5;i<=10;i++) {
-//             tree.insert(new Value(5L), new RID(i / 4 + 1, i % 4));
-//         }
-        
-         tree.printTree();
-         tree.printLeafChain();
-        
-     //     // 搜索测试
-          System.out.println("\n2. 搜索测试:");
-          for (int i = 1; i <= 14; i++) {
-              RID result = tree.searchSingle(new Value((long) i));
-              System.out.println("搜索键 " + i + ": " + result);
-          }
-        
-         // 范围查询测试
-         System.out.println("\n3. 范围查询测试:");
-         List<RID> rangeResult = tree.rangeSearch(new Value(3L), new Value(7L));
-         System.out.println("范围查询 (3 到 7): " + rangeResult);
-        
-         // 删除测试
-         System.out.println("\n4. 删除测试:");
-         System.out.println("删除键 3: " + tree.delete(new Value(3L)));
-         System.out.println("删除键 15: " + tree.delete(new Value(15L)));
-        
-         System.out.println("\n删除后的树结构:");
-         tree.printTree();
-         tree.printLeafChain();
-        
-         System.out.println("\n验证删除: 搜索键 3: " + tree.searchSingle(new Value(3L)));
-         System.out.println("\n验证删除: 搜索键 4: " + tree.searchSingle(new Value(4L)));
-        
-         // 验证树的完整性
-         System.out.println("\n5. 树的完整性验证: " + tree.validate());
-        
-         // 额外插入测试，触发更多分裂
-         System.out.println("\n6. 额外插入测试 (11-20):");
-         for (int i = 11; i <= 20; i++) {
-             tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-             System.out.println("插入键 " + i + " 后验证: " + tree.validate());
-         }
-        
-         tree.printTree();
-         tree.printLeafChain();
-         System.out.println("最终验证: " + tree.validate());
-     }
+            // 测试整数类型
+            System.out.println("\n1. 测试整数类型插入...");
+            for (int i = 1; i <= 10; i++) {
+                tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
+            }
+            
+            tree.printTree();
+            tree.printLeafChain();
+            
+            // 搜索测试
+            System.out.println("\n2. 搜索测试:");
+            for (int i = 1; i <= 14; i++) {
+                RID result = tree.searchSingle(new Value((long) i));
+                System.out.println("搜索键 " + i + ": " + result);
+            }
+            
+            // 范围查询测试
+            System.out.println("\n3. 范围查询测试:");
+            List<RID> rangeResult = tree.rangeSearch(new Value(2L), new Value(4L));
+            System.out.println("范围查询 (2 到 4): " + rangeResult);
+            
+            System.out.println("\n验证树的完整性: " + tree.validate());
+            
+            // 测试字符串类型
+            System.out.println("\n4. 测试字符串类型 (新树):");
+            BPlusTree stringTree = new BPlusTree(3);
+            String[] names = {"Alice", "Bob", "Charlie", "David", "Eve"};
+            for (int i = 0; i < names.length; i++) {
+                stringTree.insert(new Value(names[i]), new RID(i + 1, 0));
+            }
+            
+            stringTree.printTree();
+            stringTree.printLeafChain();
+            
+            // 测试双精度类型
+            System.out.println("\n5. 测试双精度类型 (新树):");
+            BPlusTree doubleTree = new BPlusTree(3);
+            double[] values = {1.5, 2.7, 3.1, 4.8, 5.2};
+            for (int i = 0; i < values.length; i++) {
+                doubleTree.insert(new Value(values[i]), new RID(i + 1, 0));
+            }
+            
+            doubleTree.printTree();
+            doubleTree.printLeafChain();
+            
+            System.out.println("\n验证字符串树: " + stringTree.validate());
+            System.out.println("验证双精度树: " + doubleTree.validate());
+            
+        } catch (Exception e) {
+            System.err.println("测试过程中发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

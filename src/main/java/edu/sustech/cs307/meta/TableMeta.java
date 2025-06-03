@@ -121,6 +121,8 @@ public class TableMeta {
     private void createBTreeIndex(String columnName) {
         BPlusTree tree = new BPlusTree(DEFAULT_BTREE_DEGREE);
         this.indexTrees.put(columnName, tree);
+        // System.out.println("Index tree created for column: " + columnName);
+        // System.out.println(this.indexTrees);
         tree.printTree();
     }
 
@@ -239,6 +241,7 @@ public class TableMeta {
      * @return B+树，如果不存在返回null
      */
     public BPlusTree getBTreeIndex(String columnName) {
+        // System.out.println(this.indexTrees);
         return this.indexTrees.get(columnName);
     }
 
@@ -360,5 +363,12 @@ public class TableMeta {
     @JsonIgnore
     public Map<String, BPlusTree> getIndexTrees() {
         return indexTrees;
+    }
+
+    public void printColumns() {
+        System.out.println("Table: " + tableName);
+        for (ColumnMeta column : columns_list) {
+            System.out.println("Column: " + column.name + ", Type: " + column.type);
+        }
     }
 }
