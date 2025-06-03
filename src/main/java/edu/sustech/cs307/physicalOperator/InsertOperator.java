@@ -60,11 +60,11 @@ public class InsertOperator implements PhysicalOperator {
                         // System.out.println("------------"+tableMeta.getIndexTrees().keySet()+"-----------------");
 //                         System.out.println("111111111111111111111111111111");
                         tableMeta.printColumns();
-                        int tmp = 0;
+                        int tmp = values.size() - 1;
 //                         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         // System.out.println(values.size());
                         for (String indexName : tableMeta.getColumns().keySet()) {
-                            if (tmp >= values.size()) {
+                            if (tmp < 0) {
                                 break;
                             }
 //                            System.out.println("2222222222222222222222222222222");
@@ -83,7 +83,7 @@ public class InsertOperator implements PhysicalOperator {
                             // System.out.println("344444444444444444444444444444444443333");
                             tree.printTree();
                             // System.out.println(rid);
-                            tmp++;
+                            tmp--;
                             // System.out.println(rid);
                         }
                     }

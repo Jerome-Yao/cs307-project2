@@ -57,7 +57,7 @@ public abstract class Tuple {
         String operator = binaryExpr.getStringExpression();
         Value leftValue = null;
         Value rightValue = null;
-
+        // System.out.println("ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
         try {
             if (leftExpr instanceof Column leftColumn) {
                 // leftValue = tuple.getValue(new TabCol(leftColumn.getTableName(),
@@ -71,6 +71,8 @@ public abstract class Tuple {
                 leftValue = tuple.getValue(new TabCol(table_name, leftColumn.getColumnName()));
                 if (leftValue.type == ValueType.CHAR) {
                     leftValue = new Value(leftValue.toString());
+                    // System.out.println("ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+                    // System.out.println("eeeeeeeeeeeeeee" + leftValue.getValue());
                 }
             } else {
                 leftValue = getConstantValue(leftExpr); // Handle constant left value
@@ -86,6 +88,7 @@ public abstract class Tuple {
                     table_name = tableTuple.getTableName();
                 }
                 rightValue = tuple.getValue(new TabCol(table_name, rightColumn.getColumnName()));
+                // System.out.println("rightValue: " + rightValue);
             } else {
                 rightValue = getConstantValue(rightExpr); // Handle constant right value
 

@@ -158,14 +158,32 @@ public class BPlusTree {
     
     public boolean delete(Value key) {
         try {
-            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
-            boolean deleted = leaf.delete(key);
+            //  System.out.println("--------------------------------delete key-----------------: "+key.getType());
+            // System.out.println("--------------------------------delete key-----------------: "+key.getValue());
+           BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
+            // System.out.println("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+            // System.out.println("------------------------leaf:--------------------------------- " );
+//           System.out.println("------------------------leaf: " + leaf.getKeys());
+        //    System.out.println("------------------------leaf: " + leaf.getFirstKey());
+            //System.out.println("------------------------leaf: " + leaf.getValues().getFirst().getValue());
+            //System.out.println("------------------------leaf: " + leaf.getValues().getFirst().getType());
+            // if (leaf.getKeys() != null && !leaf.getKeys().isEmpty()) {
+                // System.out.println("------------------------leaf first key: " + leaf.getKeys().get(0));
+            // } else {
+                // System.out.println("------------------------leaf has no keys or keys is null");
+            // }
+//            System.out.println("------------------------key: " + key);
+//            System.out.println("------------------------values: " + leaf.getValues());
+            // System.out.println("------------------------kkeyfffffffffffffffffffffffff " + key.getValue());
+           boolean deleted = leaf.delete(key);
             
-            if (deleted && leaf.needsRebalance() && leaf != root) {
-                rebalanceAfterDeletion(leaf);
+           if (deleted && leaf.needsRebalance() && leaf != root) {
+               rebalanceAfterDeletion(leaf);
+
             }
-            
-            return deleted;
+//
+           return deleted;
+            // return true;
         } catch (Exception e) {
             System.err.println("Error during delete: " + e.getMessage());
             return false;
@@ -520,27 +538,28 @@ public class BPlusTree {
             BPlusTree tree = new BPlusTree(3);
 
             // 测试整数类型
-            System.out.println("\n1. 测试整数类型插入...");
-            for (int i = 1; i <= 10; i++) {
-                tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-            }
-            
-            tree.printTree();
-            tree.printLeafChain();
-            
-            // 搜索测试
-            System.out.println("\n2. 搜索测试:");
-            for (int i = 1; i <= 14; i++) {
-                RID result = tree.searchSingle(new Value((long) i));
-                System.out.println("搜索键 " + i + ": " + result);
-            }
-            
-            // 范围查询测试
-            System.out.println("\n3. 范围查询测试:");
-            List<RID> rangeResult = tree.rangeSearch(new Value(2L), new Value(4L));
-            System.out.println("范围查询 (2 到 4): " + rangeResult);
-            
-            System.out.println("\n验证树的完整性: " + tree.validate());
+//            System.out.println("\n1. 测试整数类型插入...");
+//            for (int i = 1; i <= 10; i++) {
+//                tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
+//            }
+//
+//            tree.printTree();
+//            tree.printLeafChain();
+//            System.out.println("tree delete 5: " + tree.delete(new Value(5L)));
+//
+//            // 搜索测试
+//            System.out.println("\n2. 搜索测试:");
+//            for (int i = 1; i <= 14; i++) {
+//                RID result = tree.searchSingle(new Value((long) i));
+//                System.out.println("搜索键 " + i + ": " + result);
+//            }
+//
+//            // 范围查询测试
+//            System.out.println("\n3. 范围查询测试:");
+//            List<RID> rangeResult = tree.rangeSearch(new Value(2L), new Value(4L));
+//            System.out.println("范围查询 (2 到 4): " + rangeResult);
+//
+//            System.out.println("\n验证树的完整性: " + tree.validate());
             
             // 测试字符串类型
             System.out.println("\n4. 测试字符串类型 (新树):");
@@ -549,24 +568,24 @@ public class BPlusTree {
             for (int i = 0; i < names.length; i++) {
                 stringTree.insert(new Value(names[i]), new RID(i + 1, 0));
             }
-            
+            System.out.println("-----wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww-------------string delete Bob: " + stringTree.delete(new Value("Bob")));
             stringTree.printTree();
             stringTree.printLeafChain();
             
             // 测试双精度类型
-            System.out.println("\n5. 测试双精度类型 (新树):");
-            BPlusTree doubleTree = new BPlusTree(3);
-            double[] values = {1.5, 2.7, 3.1, 4.8, 5.2};
-            for (int i = 0; i < values.length; i++) {
-                doubleTree.insert(new Value(values[i]), new RID(i + 1, 0));
-            }
-            
-            doubleTree.printTree();
-            doubleTree.printLeafChain();
-            
-            System.out.println("\n验证字符串树: " + stringTree.validate());
-            System.out.println("验证双精度树: " + doubleTree.validate());
-            
+//            System.out.println("\n5. 测试双精度类型 (新树):");
+//            BPlusTree doubleTree = new BPlusTree(3);
+//            double[] values = {1.5, 2.7, 3.1, 4.8, 5.2};
+//            for (int i = 0; i < values.length; i++) {
+//                doubleTree.insert(new Value(values[i]), new RID(i + 1, 0));
+//            }
+//            System.out.println("double test---------------------"+doubleTree.delete(new Value(1.5)));
+//            doubleTree.printTree();
+//            doubleTree.printLeafChain();
+//
+//            System.out.println("\n验证字符串树: " + stringTree.validate());
+//            System.out.println("验证双精度树: " + doubleTree.validate());
+//
         } catch (Exception e) {
             System.err.println("测试过程中发生错误: " + e.getMessage());
             e.printStackTrace();

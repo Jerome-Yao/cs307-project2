@@ -73,6 +73,9 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     
     @Override
     public Value getFirstKey() {
+        // if (keys.isEmpty()) {
+        //     System.out.println("=------------------------------Warning: Attempting to get first key from an empty leaf node.");
+        // }
         return keys.isEmpty() ? null : keys.get(0);
     }
 
@@ -91,7 +94,7 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     public List<RID> search(Value key) {
         List<RID> result = new ArrayList<>();
         for (int i = 0; i < keys.size(); i++) {
-            if (keys.get(i).equals(key)) {
+            if (isValueEqual(keys.get(i), key)) {
                 result.add(values.get(i));
             }
         }
@@ -100,7 +103,7 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     
     public RID searchSingle(Value key) {
         for (int i = 0; i < keys.size(); i++) {
-            if (keys.get(i).equals(key)) {
+            if (isValueEqual(keys.get(i), key)) {
                 return values.get(i);
             }
         }
@@ -125,16 +128,82 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
         return result;
     }
     
-    // 修复删除操作
+    // 修复删除操作 - 使用更安全的值比较方法
     public boolean delete(Value key) {
+        // System.out.println("-------------------------------");
+        // System.out.println("Deleting key: " + key + " (type: " + getValueType(key) + ")");
+        // System.out.println("Current keys in leaf:");
+        // for (int i = 0; i < keys.size(); i++) {
+        //     System.out.println("  [" + i + "] " + keys.get(i) + " (type: " + getValueType(keys.get(i)) + 
+        //                      ") equals check: " + isValueEqual(keys.get(i), key));
+        // }
+        // System.out.println("-------------------------------");
+        // System.out.println("fffffffffffffffffffffffffffffff"+keys.size());
         for (int i = 0; i < keys.size(); i++) {
-            if (keys.get(i).equals(key)) {
+            // System.out.println("----------------------------"+keys.get(i).getValue()+"----------------------------");
+            // System.out.println("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwkey.getValue() = " + key.getValue());
+            if (isValueEqual(keys.get(i), key)) {
+                // System.out.println("Found key at index " + i + ", removing...");
                 keys.remove(i);
                 values.remove(i);
                 return true;
             }
         }
+        System.out.println("Key not found for deletion");
         return false;
+    }
+    
+    // 安全的值比较方法
+    private boolean isValueEqual(Value v1, Value v2) {
+        if (v1 == null && v2 == null) return true;
+        if (v1 == null || v2 == null) return false;
+        
+        try {
+            // 首先尝试使用 Value 的 equals 方法
+            if (v1.equals(v2)) return true;
+            
+            // 如果 equals 不可靠，尝试直接比较底层值
+            Object val1 = v1.getValue();
+            Object val2 = v2.getValue();
+            
+            if (val1 == null && val2 == null) return true;
+            if (val1 == null || val2 == null) return false;
+            
+            // 对于字符串类型，进行特殊处理
+            if (val1 instanceof String && val2 instanceof String) {
+                return ((String) val1).equals((String) val2);
+            }
+            
+            // 对于数值类型
+            if (val1 instanceof Number && val2 instanceof Number) {
+                return val1.equals(val2);
+            }
+            
+            // 通用比较
+            return val1.equals(val2);
+            
+        } catch (Exception e) {
+            System.err.println("Error comparing values: " + e.getMessage());
+            // 如果比较失败，尝试 compareTo 方法
+            try {
+                return v1.compareTo(v2) == 0;
+            } catch (Exception e2) {
+                System.err.println("Error using compareTo: " + e2.getMessage());
+                return false;
+            }
+        }
+    }
+    
+    // 获取值的类型信息
+    private String getValueType(Value value) {
+        if (value == null) return "null";
+        try {
+            Object val = value.getValue();
+            if (val == null) return "null";
+            return val.getClass().getSimpleName();
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
     
     // 检查节点是否需要重新平衡（键数量过少）
@@ -199,6 +268,7 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     
     // Getters and setters
     public List<RID> getValues() { return values; }
+    // public List<
     public BPlusTreeLeafNode getNext() { return next; }
     public BPlusTreeLeafNode getPrev() { return prev; }
     public void setNext(BPlusTreeLeafNode next) { this.next = next; }
