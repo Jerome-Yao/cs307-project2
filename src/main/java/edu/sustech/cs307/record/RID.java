@@ -13,6 +13,18 @@ public class RID {
         this.pageNum = rid.pageNum;
         this.slotNum = rid.slotNum;
     }
+    
+    public RID() {
+        this.pageNum = 0;
+        this.slotNum = 0;
+    }
+
+    public int getPageNum() {
+        return pageNum;
+    }
+    public int getSlotNum() {
+        return slotNum;
+    }
 
     public String toString() {
         return "RID{" +

@@ -93,4 +93,19 @@ public class InMemoryOrderedIndex implements Index {
 
         return subMap.entrySet().iterator();
     }
+
+    public void printIndex() {
+        if (indexMap == null) {
+            Logger.warn("Index map is not initialized");
+            return;
+        }
+        
+        System.out.println("Current Index Contents (" + indexMap.size() + " entries):");
+        int count = 1;
+        for (Map.Entry<Value, RID> entry : indexMap.entrySet()) {
+            System.out.println( count + "++" + entry.getKey().toString() +  
+                entry.getValue().toString());
+        }
+        Logger.info("Printed {} index entries", indexMap.size());
+    }
 }

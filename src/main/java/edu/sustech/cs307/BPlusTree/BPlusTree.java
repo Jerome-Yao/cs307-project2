@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 import edu.sustech.cs307.value.Value;
 import edu.sustech.cs307.record.RID;
+import edu.sustech.cs307.index.InMemoryOrderedIndex;
 
 class Node {
     List<Value> keys;
@@ -520,5 +521,7 @@ public class BPlusTree {
         
         // 验证树的完整性
         System.out.println("\n树的完整性验证: " + tree.validate());
+        InMemoryOrderedIndex test = new InMemoryOrderedIndex("/home/wgx/database/cs307-project2/src/test/testBPlusTree/test.json");
+        test.printIndex();
     }
 }

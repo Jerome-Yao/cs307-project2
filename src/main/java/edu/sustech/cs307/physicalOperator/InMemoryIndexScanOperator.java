@@ -35,9 +35,9 @@ public class InMemoryIndexScanOperator implements PhysicalOperator {
         this.index = index;
         this.bPlusTree = new BPlusTree(degree);
         Set<Map.Entry<Value, RID>> entries = index.getTreeMapEntries();
-//        for (Map.Entry<Value, RID> entry : entries) {
-//            bPlusTree.insert(new Value(entry.getValue()));
-//        }
+        for (Map.Entry<Value, RID> entry : entries) {
+            bPlusTree.insert(entry.getKey(), entry.getValue()); 
+        }
     }
 
     @Override
