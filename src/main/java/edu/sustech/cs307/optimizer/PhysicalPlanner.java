@@ -46,6 +46,8 @@ public class PhysicalPlanner {
             return handleGroupBy(dbManager, groupByOperator);
         } else if (logicalOp instanceof LogicalAggregateOperator aggregateOperator) {
             return handleAggregate(dbManager, aggregateOperator);
+        } else if (logicalOp instanceof LogicalOrderByOperator orderByOperator) {
+            return handleOrderBy(dbManager, orderByOperator);
         }
 
         else {
@@ -262,5 +264,11 @@ public class PhysicalPlanner {
         }
         return new UpdateOperator(scanner, logicalUpdateOp.getTableName(), logicalUpdateOp.getColumns().get(0),
                 logicalUpdateOp.getExpression());
+    }
+
+    private static PhysicalOperator handleOrderBy(DBManager dbManager, LogicalOrderByOperator logicalOrderByOp)
+            throws DBException {
+        PhysicalOperator child = generateOperator(dbManager, logicalOrderByOp.getChild());
+        return new SortOperator(child, logicalOrderByOp.getOrderByElements());
     }
 }

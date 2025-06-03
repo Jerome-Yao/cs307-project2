@@ -173,7 +173,14 @@ public class LogicalPlanner {
             root = new LogicalGroupByOperator(root, plainSelect.getFromItem().toString(),
                     plainSelect.getGroupBy().getGroupByExpressions());
         }
+        
         root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
+        
+        // Handle ORDER BY clause
+        if (plainSelect.getOrderByElements() != null && !plainSelect.getOrderByElements().isEmpty()) {
+            root = new LogicalOrderByOperator(root, plainSelect.getOrderByElements());
+        }
+        
         return root;
     }
 
