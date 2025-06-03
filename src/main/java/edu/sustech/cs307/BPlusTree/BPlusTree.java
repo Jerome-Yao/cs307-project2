@@ -38,7 +38,7 @@ public class BPlusTree {
         
         while (!current.isLeaf()) {
             BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
-            current = internal.findChild(key);
+            current = internal.findChild(key); //第一个大于等于key的子节点
         }
         
         return current;
@@ -55,6 +55,7 @@ public class BPlusTree {
             // 内部节点分裂：提升的键是中间键，需要从原节点移除
             BPlusTreeInternalNode internalNode = (BPlusTreeInternalNode) node;
             keyToPromote = internalNode.getPromotedKey(); // 需要实现这个方法
+            // internalNode.getKeys().remove(keyToPromote);
         }
         
         if (node == root) {
@@ -82,8 +83,14 @@ public class BPlusTree {
     
     public List<RID> search(Value key) {
         try {
-            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
-            return leaf.search(key);
+            BPlusTreeNode node = findLeaf(key);
+            if (node.isLeaf()) {
+                BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) node;
+                return leaf.search(key);
+            } else {
+                System.err.println("Error: Expected leaf node but found internal node during search.");
+                return new ArrayList<>();
+            }
         } catch (Exception e) {
             System.err.println("Error during search: " + e.getMessage());
             return new ArrayList<>();
@@ -423,10 +430,10 @@ public class BPlusTree {
         System.out.println("=== B+树测试程序 ===");
         
         // 创建一个度数为4的B+树
-        BPlusTree tree = new BPlusTree(4);
+        BPlusTree tree = new BPlusTree(3);
 
         // 插入测试数据
-        System.out.println("\n1. 插入键 1-10...");
+        //System.out.println("\n1. 插入键 1-10...");
         for (int i = 1; i <= 10; i++) {
 //            System.out.println("插入键 " + i + " 前验证: " + tree.validate());
             tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
@@ -441,11 +448,11 @@ public class BPlusTree {
         tree.printLeafChain();
         
     //     // 搜索测试
-    //     System.out.println("\n2. 搜索测试:");
-    //     for (int i = 1; i <= 14; i++) {
-    //         RID result = tree.searchSingle(new Value((long) i));
-    //         System.out.println("搜索键 " + i + ": " + result);
-    //     }
+         System.out.println("\n2. 搜索测试:");
+         for (int i = 1; i <= 14; i++) {
+             RID result = tree.searchSingle(new Value((long) i));
+             System.out.println("搜索键 " + i + ": " + result);
+         }
         
     //     // 范围查询测试
     //     System.out.println("\n3. 范围查询测试:");

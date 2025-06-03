@@ -68,6 +68,7 @@ public class BPlusTreeInternalNode extends BPlusTreeNode {
     // 修复查找子节点的逻辑
     public BPlusTreeNode findChild(Value key) {
         int pos = 0;
+        // 找到第一个大于等于key的子节点位置
         while (pos < keys.size() && key.compareTo(keys.get(pos)) >= 0) {
             pos++;
         }

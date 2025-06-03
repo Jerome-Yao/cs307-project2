@@ -43,7 +43,7 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     
     @Override
     public BPlusTreeNode split() {
-        int mid = (keys.size() + 1) / 2; // 修复分裂点计算
+        int mid = (keys.size() + 1) / 2; // 分裂点计算
         BPlusTreeLeafNode newNode = new BPlusTreeLeafNode(degree);
         
         // Move half of the keys and values to new node
