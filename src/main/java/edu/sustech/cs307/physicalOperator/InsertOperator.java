@@ -75,7 +75,7 @@ public class InsertOperator implements PhysicalOperator {
     @Override
     public ArrayList<ColumnMeta> outputSchema() {
         ArrayList<ColumnMeta> outputSchema = new ArrayList<>();
-        outputSchema.add(new ColumnMeta("insert", "numberOfInsertRows", ValueType.INTEGER, 0, 0));
+        outputSchema.add(new ColumnMeta("insert", "Count", ValueType.INTEGER, 0, 0));
         return outputSchema;
     }
 
