@@ -59,7 +59,7 @@ public class BPlusTreeInternalNode extends BPlusTreeNode {
         }
         
         // Remove moved elements from current node
-        keys.subList(mid, keys.size()).clear();
+        keys.subList(mid + 1, keys.size()).clear();
         children.subList(mid + 1, children.size()).clear();
         
         return newNode;
@@ -68,6 +68,18 @@ public class BPlusTreeInternalNode extends BPlusTreeNode {
     @Override
     public Value getFirstKey() {
         return keys.isEmpty() ? null : keys.get(0);
+    }
+
+    @Override
+    public Value getLastKey() {
+        return keys.isEmpty() ? null : keys.get(keys.size() - 1);
+    }
+
+    @Override
+    public void removeLastKey() {
+        if (!keys.isEmpty()) {
+            keys.remove(keys.size() - 1);
+        }
     }
     
     // 修复查找子节点的逻辑

@@ -24,7 +24,7 @@ public class BPlusTree {
             BPlusTreeNode leaf = findLeaf(key);
             leaf.insert(key, rid);
             
-            if (leaf.isFull()) {
+            if (leaf.isNeedSplit()) {
                 splitAndPropagate(leaf);
             }
         } catch (Exception e) {
@@ -38,6 +38,9 @@ public class BPlusTree {
         
         while (!current.isLeaf()) {
             BPlusTreeInternalNode internal = (BPlusTreeInternalNode) current;
+            // if (key.compareTo(new Value(5L)) == 0) {
+            //     System.out.println(internal.getKeys());
+            // }
             current = internal.findChild(key); //第一个大于等于key的子节点
         }
         
@@ -45,20 +48,28 @@ public class BPlusTree {
     }
     
     private void splitAndPropagate(BPlusTreeNode node) {
-        BPlusTreeNode newNode = node.split();
+        // if(!node.isLeaf())System.out.println("---------------分裂前节点: " + node.getKeys());
+        // if(!node.isLeaf())System.out.println("---------------分裂后节点: " + newNode.getKeys());
         Value keyToPromote;
-        
+        BPlusTreeNode newNode = node.split();
         if (node.isLeaf()) {
+            // System.out.println("---------------分裂前节点: " + node.getKeys());
+            // newNode = node.split();
+            // System.out.println("---------------分裂后节点: " + newNode.getKeys());
             // 叶子节点分裂：提升的键是新节点的第一个键
             keyToPromote = newNode.getFirstKey();
         } else {
+            // newNode = node.split();
+            keyToPromote = node.getLastKey();
+            node.removeLastKey(); // 从原节点移除提升的键
             // 内部节点分裂：提升的键是中间键，需要从原节点移除
-            BPlusTreeInternalNode internalNode = (BPlusTreeInternalNode) node;
-            keyToPromote = internalNode.getPromotedKey(); // 需要实现这个方法
+            // BPlusTreeInternalNode internalNode = (BPlusTreeInternalNode) node;
+            // System.out.println("---------------分裂内部节点，提升键: " + internalNode.getKeys());
+            // keyToPromote = internalNode.getPromotedKey(); // 需要实现这个方法
             // internalNode.getKeys().remove(keyToPromote);
         }
-        
         if (node == root) {
+            // System.out.println("分裂根节点，提升键: " + keyToPromote);
             // 创建新根节点
             BPlusTreeInternalNode newRoot = new BPlusTreeInternalNode(degree);
             newRoot.getChildren().add(node);
@@ -75,7 +86,7 @@ public class BPlusTree {
             newNode.setParent(parent);
             parent.insertChild(keyToPromote, newNode);
             
-            if (parent.isFull()) {
+            if (parent.isNeedSplit()) {
                 splitAndPropagate(parent);
             }
         }
@@ -426,62 +437,66 @@ public class BPlusTree {
     }
     
     // 测试主方法
-    public static void main(String[] args) {
-        System.out.println("=== B+树测试程序 ===");
+//     public static void main(String[] args) {
+//         System.out.println("=== B+树测试程序 ===");
         
-        // 创建一个度数为4的B+树
-        BPlusTree tree = new BPlusTree(3);
+//         // 创建一个度数为4的B+树
+//         BPlusTree tree = new BPlusTree(3);
 
-        // 插入测试数据
-        //System.out.println("\n1. 插入键 1-10...");
-        for (int i = 1; i <= 10; i++) {
-//            System.out.println("插入键 " + i + " 前验证: " + tree.validate());
-            tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-//            System.out.println("插入键 " + i + " 后验证: " + tree.validate());
-            // if (!tree.validate()) {
-            //     System.out.println("插入键 " + i + " 后验证失败，停止测试");
-            //     break;
-            // }
-        }
+//         // 插入测试数据
+//         //System.out.println("\n1. 插入键 1-10...");
+//         for (int i = 1; i <= 10; i++) {
+// //            System.out.println("插入键 " + i + " 前验证: " + tree.validate());
+//             tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
+//             // tree.printTree();
+//             // tree.printLeafChain();
+//             // System.out.println("-------------------------------------------------");
+// //            System.out.println("插入键 " + i + " 后验证: " + tree.validate());
+//             // if (!tree.validate()) {
+//             //     System.out.println("插入键 " + i + " 后验证失败，停止测试");
+//             //     break;
+//             // }
+//         }
         
-        tree.printTree();
-        tree.printLeafChain();
+//         tree.printTree();
+//         tree.printLeafChain();
         
-    //     // 搜索测试
-         System.out.println("\n2. 搜索测试:");
-         for (int i = 1; i <= 14; i++) {
-             RID result = tree.searchSingle(new Value((long) i));
-             System.out.println("搜索键 " + i + ": " + result);
-         }
+//     //     // 搜索测试
+//          System.out.println("\n2. 搜索测试:");
+//          for (int i = 1; i <= 14; i++) {
+//              RID result = tree.searchSingle(new Value((long) i));
+//              System.out.println("搜索键 " + i + ": " + result);
+//          }
         
-    //     // 范围查询测试
-    //     System.out.println("\n3. 范围查询测试:");
-    //     List<RID> rangeResult = tree.rangeSearch(new Value(3L), new Value(7L));
-    //     System.out.println("范围查询 (3 到 7): " + rangeResult);
+//         // 范围查询测试
+//         System.out.println("\n3. 范围查询测试:");
+//         List<RID> rangeResult = tree.rangeSearch(new Value(3L), new Value(7L));
+//         System.out.println("范围查询 (3 到 7): " + rangeResult);
         
-    //     // 删除测试
-    //     System.out.println("\n4. 删除测试:");
-    //     System.out.println("删除键 3: " + tree.delete(new Value(3L)));
-    //     System.out.println("删除键 15: " + tree.delete(new Value(15L)));
+//         // 删除测试
+//         System.out.println("\n4. 删除测试:");
+//         System.out.println("删除键 3: " + tree.delete(new Value(3L)));
+//         System.out.println("删除键 15: " + tree.delete(new Value(15L)));
         
-    //     System.out.println("\n删除后的树结构:");
-    //     tree.printTree();
-    //     tree.printLeafChain();
+//         System.out.println("\n删除后的树结构:");
+//         tree.printTree();
+//         tree.printLeafChain();
         
-    //     System.out.println("\n验证删除: 搜索键 3: " + tree.searchSingle(new Value(3L)));
+//         System.out.println("\n验证删除: 搜索键 3: " + tree.searchSingle(new Value(3L)));
+//         System.out.println("\n验证删除: 搜索键 4: " + tree.searchSingle(new Value(4L)));
         
-    //     // 验证树的完整性
-    //     System.out.println("\n5. 树的完整性验证: " + tree.validate());
+//         // 验证树的完整性
+//         System.out.println("\n5. 树的完整性验证: " + tree.validate());
         
-    //     // 额外插入测试，触发更多分裂
-    //     System.out.println("\n6. 额外插入测试 (11-20):");
-    //     for (int i = 11; i <= 20; i++) {
-    //         tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-    //         System.out.println("插入键 " + i + " 后验证: " + tree.validate());
-    //     }
+//         // 额外插入测试，触发更多分裂
+//         System.out.println("\n6. 额外插入测试 (11-20):");
+//         for (int i = 11; i <= 20; i++) {
+//             tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
+//             System.out.println("插入键 " + i + " 后验证: " + tree.validate());
+//         }
         
-    //     tree.printTree();
-    //     tree.printLeafChain();
-    //     System.out.println("最终验证: " + tree.validate());
-    }
+//         tree.printTree();
+//         tree.printLeafChain();
+//         System.out.println("最终验证: " + tree.validate());
+//     }
 }

@@ -75,6 +75,18 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
     public Value getFirstKey() {
         return keys.isEmpty() ? null : keys.get(0);
     }
+
+    @Override
+    public Value getLastKey() {
+        return keys.isEmpty()? null : keys.get(keys.size() - 1);
+    }
+
+    @Override
+    public void removeLastKey() {
+        if (!keys.isEmpty()) {
+            keys.remove(keys.size() - 1);
+        }
+    }
     
     public List<RID> search(Value key) {
         List<RID> result = new ArrayList<>();

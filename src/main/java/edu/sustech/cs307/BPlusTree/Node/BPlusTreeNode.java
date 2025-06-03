@@ -21,6 +21,8 @@ public abstract class BPlusTreeNode {
     public abstract void insert(Value key, RID rid);
     public abstract BPlusTreeNode split();
     public abstract Value getFirstKey();
+    public abstract Value getLastKey();
+    public abstract void removeLastKey();
     
     // Getters and setters
     public boolean isLeaf() { return isLeaf; }
