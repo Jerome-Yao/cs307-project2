@@ -16,7 +16,12 @@ public class BPlusTreeInternalNode extends BPlusTreeNode {
     
     @Override
     public boolean isFull() {
-        return keys.size() >= degree - 1;
+        return keys.size() >= degree;
+    }
+
+    @Override
+    public boolean isNeedSplit() {
+        return keys.size() > degree;
     }
     
     @Override

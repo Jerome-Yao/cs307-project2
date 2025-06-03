@@ -7,17 +7,6 @@ public class bplustree {
 	InternalNode root;
 	LeafNode firstLeaf;
 
-	/*~~~~~~~~~~~~~~~~ HELPER FUNCTIONS ~~~~~~~~~~~~~~~~*/
-
-	/**
-	 * This method performs a standard binary search on a sorted
-	 * DictionaryPair[] and returns the index of the dictionary pair
-	 * with target key t if found. Otherwise, this method returns a negative
-	 * value.
-	 * @param dps: list of dictionary pairs sorted by key within leaf node
-	 * @param t: target key value of dictionary pair being searched for
-	 * @return index of the target value if found, else a negative value
-	 */
 	private int binarySearch(DictionaryPair[] dps, int numPairs, int t) {
 		Comparator<DictionaryPair> c = new Comparator<DictionaryPair>() {
 			@Override
@@ -30,13 +19,6 @@ public class bplustree {
 		return Arrays.binarySearch(dps, 0, numPairs, new DictionaryPair(t, 0), c);
 	}
 
-	/**
-	 * This method starts at the root of the B+ tree and traverses down the
-	 * tree via key comparisons to the corresponding leaf node that holds 'key'
-	 * within its dictionary.
-	 * @param key: the unique key that lies within the dictionary of a LeafNode object
-	 * @return the LeafNode object that contains the key within its dictionary
-	 */
 	private LeafNode findLeafNode(int key) {
 
 		// Initialize keys and index variable

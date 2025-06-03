@@ -15,7 +15,8 @@ public abstract class BPlusTreeNode {
         this.isLeaf = isLeaf;
         this.parent = null;
     }
-    
+
+    public abstract boolean isNeedSplit();
     public abstract boolean isFull();
     public abstract void insert(Value key, RID rid);
     public abstract BPlusTreeNode split();
