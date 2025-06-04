@@ -2,7 +2,7 @@ package edu.sustech.cs307.value;
 
 import java.nio.ByteBuffer;
 
-public class Value {
+public class Value implements Comparable<Value> {
     public Object value;
     public ValueType type;
     public static final int INT_SIZE = 8;
@@ -98,8 +98,47 @@ public class Value {
     }
 
     @Override
+    public int compareTo(Value other) {
+        if (this.type != other.type) {
+            throw new IllegalArgumentException("Cannot compare values of different types");
+        }
+        return switch (this.type) {
+            case INTEGER -> {
+                long thisInt = (Long) this.value;
+                long otherInt = (Long) other.value;
+                yield Long.compare(thisInt, otherInt); // 添加 yield 返回比较结果
+            }
+            case FLOAT -> {
+                double thisFloat = (Double) this.value;
+                double otherFloat = (Double) other.value;
+                yield Double.compare(thisFloat, otherFloat);
+            }
+            case CHAR -> {
+                String thisStr = (String) this.value;
+                String otherStr = (String) other.value;
+                yield thisStr.compareTo(otherStr);
+            }
+            default -> throw new IllegalArgumentException("Unsupported value type: " + this.type);
+        };
+    }
+
+    @Override
     public int hashCode() {
         return java.util.Objects.hash(type, value);
+    }
+    public ValueType getType() {
+        return type;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public boolean isValid() {
+        return value != null && type != null && 
+               (type == ValueType.INTEGER && value instanceof Long ||
+                type == ValueType.FLOAT && value instanceof Double ||
+                type == ValueType.CHAR && value instanceof String);
     }
 
     @Override

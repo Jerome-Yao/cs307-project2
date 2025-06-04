@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.Set;
 
 public class InMemoryOrderedIndex implements Index {
 
@@ -33,6 +35,7 @@ public class InMemoryOrderedIndex implements Index {
             Logger.error("Error loading index data: " + e.getMessage());
         }
     }
+    
 
     @Override
     public RID EqualTo(Value value) {
@@ -68,6 +71,10 @@ public class InMemoryOrderedIndex implements Index {
         return subMap.entrySet().iterator();
     }
 
+    public Set<Map.Entry<Value, RID>> getTreeMapEntries() {
+        return indexMap.entrySet();
+    }
+
     /**
      * 返回指定范围内的条目迭代器。
      * 
@@ -85,5 +92,20 @@ public class InMemoryOrderedIndex implements Index {
                 high, rightEqual);
 
         return subMap.entrySet().iterator();
+    }
+
+    public void printIndex() {
+        if (indexMap == null) {
+            Logger.warn("Index map is not initialized");
+            return;
+        }
+        
+        System.out.println("Current Index Contents (" + indexMap.size() + " entries):");
+        int count = 1;
+        for (Map.Entry<Value, RID> entry : indexMap.entrySet()) {
+            System.out.println( count + "++" + entry.getKey().toString() +  
+                entry.getValue().toString());
+        }
+        Logger.info("Printed {} index entries", indexMap.size());
     }
 }

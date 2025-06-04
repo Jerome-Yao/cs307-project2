@@ -34,6 +34,13 @@ public class MetaManager {
         }
         tables.put(tableName, tableMeta);
         saveToJson();
+
+        // 新增：为表的每一列创建B+树索引
+        for (ColumnMeta column : tableMeta.columns_list) {
+            String columnName = column.name;
+            // 假设BPlusTreeIndexManager已注入
+            // bPlusTreeIndexManager.createIndex(tableName, columnName);
+        }
     }
 
     public void dropTable(String tableName) throws DBException {

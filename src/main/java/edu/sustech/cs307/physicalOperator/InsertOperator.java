@@ -1,7 +1,10 @@
 package edu.sustech.cs307.physicalOperator;
 
+import edu.sustech.cs307.BPlusTree.BPlusTree;
+// import edu.sustech.cs307.BPlusTree.bplustree;
 import edu.sustech.cs307.exception.DBException;
 import edu.sustech.cs307.meta.ColumnMeta;
+import edu.sustech.cs307.meta.TableMeta;
 import edu.sustech.cs307.system.DBManager;
 import edu.sustech.cs307.tuple.TableTuple;
 import edu.sustech.cs307.tuple.TempTuple;
@@ -10,7 +13,7 @@ import edu.sustech.cs307.value.Value;
 import edu.sustech.cs307.value.ValueType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
+import edu.sustech.cs307.record.RID;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -36,7 +39,7 @@ public class InsertOperator implements PhysicalOperator {
         return !this.outputed;
     }
 
-    @Override
+        @Override
     public void Begin() throws DBException {
         try {
             var fileHandle = dbManager.getRecordManager().OpenFile(data_file);
@@ -45,8 +48,45 @@ public class InsertOperator implements PhysicalOperator {
             for (int i = 0; i < values.size(); i++) {
                 buffer.writeBytes(values.get(i).ToByte());
                 if (i != 0 && (i + 1) % columnSize == 0) {
-                    fileHandle.InsertRecord(buffer);
+                    RID rid = fileHandle.InsertRecord(buffer);
                     buffer.clear();
+
+                    // 获取表元数据
+                    TableMeta tableMeta = dbManager.getMetaManager().getTable(data_file);
+                    // System.out.println(tableMeta);
+//                     System.out.println("0000000000000000000000000000000000");
+                    if (tableMeta != null) {
+                        // 遍历所有索引
+                        // System.out.println("------------"+tableMeta.getIndexTrees().keySet()+"-----------------");
+//                         System.out.println("111111111111111111111111111111");
+                        tableMeta.printColumns();
+                        int tmp = values.size() - 1;
+//                         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        // System.out.println(values.size());
+                        for (String indexName : tableMeta.getColumns().keySet()) {
+                            if (tmp < 0) {
+                                break;
+                            }
+//                            System.out.println("2222222222222222222222222222222");
+                            System.out.println("indexName: "+indexName);
+                            BPlusTree tree = tableMeta.getBTreeIndex(indexName);
+                            // System.out.println(rid);
+                            // if (tree == null) {
+                            //     System.out.println("Index " + indexName + " not found.");
+                            //     continue;
+                            // }
+                            // System.out.println(rid);
+                            // System.out.println(values.get(tmp));
+                            tree.insert(values.get(tmp), rid);
+                            System.out.println(tree);
+                            // System.out.println(values);
+                            // System.out.println("344444444444444444444444444444444443333");
+                            tree.printTree();
+                            // System.out.println(rid);
+                            tmp--;
+                            // System.out.println(rid);
+                        }
+                    }
                 }
             }
             this.rowCount = values.size() / columnSize;
