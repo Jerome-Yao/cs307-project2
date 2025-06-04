@@ -5,7 +5,6 @@ import edu.sustech.cs307.record.Record;
 import java.beans.Expression;
 //import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
-import java.util.List;
 
 import edu.sustech.cs307.BPlusTree.BPlusTree;
 import edu.sustech.cs307.exception.DBException;
@@ -115,13 +114,15 @@ public class DeleteOperator implements PhysicalOperator {
 
     @Override
     public Tuple Current() {
-        return child.Current();
+        ArrayList<Value> values = new ArrayList<>();
+        values.add(new Value(rowCount, ValueType.INTEGER));
+        return new TempTuple(values);
     }
 
     @Override
     public ArrayList<ColumnMeta> outputSchema() {
         ArrayList<ColumnMeta> outputSchema = new ArrayList<>();
-        outputSchema.add(new ColumnMeta("delete", "numberOfDeleteRows", ValueType.INTEGER, 0, 0));
+        outputSchema.add(new ColumnMeta("delete", "Count", ValueType.INTEGER, 0, 0));
         return outputSchema;
     }
 

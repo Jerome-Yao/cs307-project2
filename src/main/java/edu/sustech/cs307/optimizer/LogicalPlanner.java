@@ -29,6 +29,7 @@ import net.sf.jsqlparser.statement.DescribeStatement;
 import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.drop.Drop;
@@ -91,7 +92,11 @@ public class LogicalPlanner {
             ShowDatabaseExecutor showDatabaseExecutor = new ShowDatabaseExecutor(showStatement);
             showDatabaseExecutor.execute();
             return null;
-        } else {
+        } 
+        else if(stmt instanceof Alter alter){
+            // TODO
+        }
+        else {
             throw new DBException(
                     ExceptionTypes.UnsupportedCommand((stmt.toString())));
         }
@@ -127,9 +132,7 @@ public class LogicalPlanner {
         // 在 Join 之后应用 Filter，Filter 的输入是 Join 的结果 (root)
         Expression whereExpr = plainSelect.getWhere();
         if (whereExpr != null) {
-            // not correct! whereExpr is In Exist Expression here!
             if (whereExpr instanceof InExpression inExpression) {
-                System.out.println(inExpression.getRightExpression().getClass());
                 if (inExpression.getRightExpression() instanceof ParenthesedSelect subSelect) {
                     // Create a LogicalOperator for the subselect
                     LogicalOperator subOperator = handleSelect(
@@ -147,6 +150,8 @@ public class LogicalPlanner {
                                 ExceptionTypes.InvalidTableWidth(subOutput.iterator().next().getValues().length));
                     }
                     root = new LogicalFilterOperator(root, whereExpr, subOutput, inExpression.isNot());
+                } else {
+                    root = new LogicalFilterOperator(root, whereExpr);
                 }
             } else if (whereExpr instanceof ExistsExpression existsExpression) {
                 throw new DBException(ExceptionTypes.NOT_SUPPORTED_OPERATION);
@@ -158,6 +163,11 @@ public class LogicalPlanner {
         // if (plainSelect.getWhere() != null) {
         // root = new LogicalFilterOperator(root, plainSelect.getWhere());
         // }
+
+        // Handle ORDER BY clause
+        if (plainSelect.getOrderByElements() != null && !plainSelect.getOrderByElements().isEmpty()) {
+            root = new LogicalOrderByOperator(root, plainSelect.getOrderByElements());
+        }
 
         // Check if there are aggregate functions in SELECT clause
         List<AggregateExpression> aggregates = AggregateParser.parseAggregatesFromSelectItems(
@@ -173,14 +183,9 @@ public class LogicalPlanner {
             root = new LogicalGroupByOperator(root, plainSelect.getFromItem().toString(),
                     plainSelect.getGroupBy().getGroupByExpressions());
         }
-        
+
         root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
-        
-        // Handle ORDER BY clause
-        if (plainSelect.getOrderByElements() != null && !plainSelect.getOrderByElements().isEmpty()) {
-            root = new LogicalOrderByOperator(root, plainSelect.getOrderByElements());
-        }
-        
+
         return root;
     }
 

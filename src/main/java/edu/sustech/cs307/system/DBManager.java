@@ -23,7 +23,7 @@ public class DBManager {
     private final RecordManager recordManager;
 
     public DBManager(DiskManager diskManager, BufferPool bufferPool, RecordManager recordManager,
-                     MetaManager metaManager) {
+            MetaManager metaManager) {
         this.diskManager = diskManager;
         this.bufferPool = bufferPool;
         this.recordManager = recordManager;
@@ -65,7 +65,7 @@ public class DBManager {
             Logger.info("|  " + StringUtils.center(table, 8) + " |");
         }
         Logger.info("|-----------|");
-        //todo: complete show table
+        // todo: complete show table
         // | -- TABLE -- |
         // | -- ${table} -- |
         // | ----------- |
@@ -76,7 +76,8 @@ public class DBManager {
         Logger.info("|" + StringUtils.center("FIELD", 13) + "|" + StringUtils.center("TYPE", 13) + "|");
         try {
             for (var col : metaManager.getTable(table_name).getColumns().keySet()) {
-                Logger.info("|" + StringUtils.center(col, 13) + "|" + StringUtils.center(metaManager.getTable(table_name).getColumns().get(col).type.toString(), 13)
+                Logger.info("|" + StringUtils.center(col, 13) + "|"
+                        + StringUtils.center(metaManager.getTable(table_name).getColumns().get(col).type.toString(), 13)
                         + "|");
             }
         } catch (DBException e) {
@@ -84,9 +85,9 @@ public class DBManager {
             return;
         }
         Logger.info("|---------------------------|");
-        //todo: complete describe table
+        // todo: complete describe table
         // | -- TABLE Field -- | -- Column Type --|
-        // | --  ${table field} --| -- ${table type} --|
+        // | -- ${table field} --| -- ${table type} --|
     }
 
     /**
@@ -128,6 +129,7 @@ public class DBManager {
         Logger.info("Drop table: " + table_name);
         metaManager.dropTable(table_name);
         recordManager.DeleteFile(table_name);
+        this.getBufferPool().FlushAllPages("");
     }
 
     /**

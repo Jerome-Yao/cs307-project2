@@ -108,7 +108,6 @@ public class DBEntry {
                     Logger.error(e.getMessage());
                     Logger.error("An error occurred. Please try again.");
                     Logger.error(Arrays.toString(e.getStackTrace()));
-                    throw new RuntimeException(e);
                 }
             }
         } catch (Exception e) {
