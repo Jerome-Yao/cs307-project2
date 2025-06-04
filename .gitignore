@@ -31,8 +31,10 @@ bin/
 .CS307-DB/
 
 target/
-Project_2_Database_Design.pdf
 CS307-DB/*
 
 .zed/
 Subquery_Implementation_Plan.md
+project_task.md
+src/main/java/edu/sustech/cs307/BPlusTree/BPlusTree.java
+AGGREGATE_FUNCTIONS.md
