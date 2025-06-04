@@ -155,6 +155,45 @@ public class BPlusTree {
             return new ArrayList<>();
         }
     }
+
+    public List<RID> searchGreater(Value key) {
+        try {
+            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
+            return leaf.searchGreaterThanFromNode(key);
+        } catch (Exception e) {
+            System.err.println("Error during searchGreater: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+    public List<RID> searchLess(Value key) {
+        try {
+            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
+            return leaf.searchLessThanToNode(key);
+        } catch (Exception e) {
+            System.err.println("Error during searchLess: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+    public List<RID> searchGreaterEqual(Value key) {
+        try {
+            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
+            return leaf.searchGreaterThanOrEqualFromNode(key);
+        } catch (Exception e) {
+            System.err.println("Error during searchGreaterEqual: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public List<RID> searchLessEqual(Value key) {
+        try {
+            BPlusTreeLeafNode leaf = (BPlusTreeLeafNode) findLeaf(key);
+            return leaf.searchLessThanOrEqualToNode(key);
+        } catch (Exception e) {
+            System.err.println("Error during searchLessEqual: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
     
     public boolean delete(Value key) {
         try {
@@ -538,21 +577,30 @@ public class BPlusTree {
             BPlusTree tree = new BPlusTree(3);
 
             // 测试整数类型
-//            System.out.println("\n1. 测试整数类型插入...");
-//            for (int i = 1; i <= 10; i++) {
-//                tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
-//            }
-//
-//            tree.printTree();
-//            tree.printLeafChain();
+            System.out.println("\n1. 测试整数类型插入...");
+            for (int i = 1; i <= 10; i++) {
+                tree.insert(new Value((long) i), new RID(i / 4 + 1, i % 4));
+            }
+
+            tree.printTree();
+            tree.printLeafChain();
 //            System.out.println("tree delete 5: " + tree.delete(new Value(5L)));
 //
 //            // 搜索测试
-//            System.out.println("\n2. 搜索测试:");
-//            for (int i = 1; i <= 14; i++) {
-//                RID result = tree.searchSingle(new Value((long) i));
-//                System.out.println("搜索键 " + i + ": " + result);
-//            }
+            System.out.println("\n2. 搜索测试:");
+            for (int i = 1; i <= 14; i++) {
+                RID result = tree.searchSingle(new Value((long) i));
+                System.out.println("搜索键 " + i + ": " + result);
+            }
+
+            List<RID> ridsgreater = tree.searchGreater(new Value(5L));
+            System.out.println("搜索大于 5 的键: " + ridsgreater);
+            List<RID> ridsless = tree.searchLess(new Value(5L));
+            System.out.println("搜索小于 5 的键: " + ridsless); 
+            List<RID> ridsgreaterEqual = tree.searchGreaterEqual(new Value(5L));
+            System.out.println("搜索大于等于 5 的键: " + ridsgreaterEqual);
+            List<RID> ridslessEqual = tree.searchLessEqual(new Value(5L));
+            System.out.println("搜索小于等于 5 的键: " + ridslessEqual);
 //
 //            // 范围查询测试
 //            System.out.println("\n3. 范围查询测试:");
@@ -562,15 +610,15 @@ public class BPlusTree {
 //            System.out.println("\n验证树的完整性: " + tree.validate());
             
             // 测试字符串类型
-            System.out.println("\n4. 测试字符串类型 (新树):");
-            BPlusTree stringTree = new BPlusTree(3);
-            String[] names = {"Alice", "Bob", "Charlie", "David", "Eve"};
-            for (int i = 0; i < names.length; i++) {
-                stringTree.insert(new Value(names[i]), new RID(i + 1, 0));
-            }
-            System.out.println("-----wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww-------------string delete Bob: " + stringTree.delete(new Value("Bob")));
-            stringTree.printTree();
-            stringTree.printLeafChain();
+//            System.out.println("\n4. 测试字符串类型 (新树):");
+//            BPlusTree stringTree = new BPlusTree(3);
+//            String[] names = {"Alice", "Bob", "Charlie", "David", "Eve"};
+//            for (int i = 0; i < names.length; i++) {
+//                stringTree.insert(new Value(names[i]), new RID(i + 1, 0));
+//            }
+//            System.out.println("-----wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww-------------string delete Bob: " + stringTree.delete(new Value("Bob")));
+//            stringTree.printTree();
+//            stringTree.printLeafChain();
             
             // 测试双精度类型
 //            System.out.println("\n5. 测试双精度类型 (新树):");

@@ -193,6 +193,107 @@ public class BPlusTreeLeafNode extends BPlusTreeNode {
             }
         }
     }
+
+        /**
+     * 优化版本：从特定叶子节点开始搜索大于指定键的记录
+     * 这个方法假设调用者已经定位到了合适的起始叶子节点
+     * @param key 比较的键值
+     * @return 匹配的RID列表
+     */
+    public List<RID> searchGreaterThanFromNode(Value key) {
+        List<RID> result = new ArrayList<>();
+        BPlusTreeLeafNode current = this;
+        
+        while (current != null) {
+            for (int i = 0; i < current.keys.size(); i++) {
+                Value currentKey = current.keys.get(i);
+                if (currentKey.compareTo(key) > 0) {
+                    result.add(current.values.get(i));
+                }
+            }
+            current = current.next;
+        }
+        return result;
+    }
+
+    /**
+     * 优化版本：从特定叶子节点开始搜索大于等于指定键的记录
+     * @param key 比较的键值
+     * @return 匹配的RID列表
+     */
+    public List<RID> searchGreaterThanOrEqualFromNode(Value key) {
+        List<RID> result = new ArrayList<>();
+        BPlusTreeLeafNode current = this;
+        
+        while (current != null) {
+            for (int i = 0; i < current.keys.size(); i++) {
+                Value currentKey = current.keys.get(i);
+                if (currentKey.compareTo(key) >= 0) {
+                    result.add(current.values.get(i));
+                }
+            }
+            current = current.next;
+        }
+        return result;
+    }
+
+    /**
+     * 优化版本：搜索小于指定键的记录，到当前节点为止
+     * @param key 比较的键值
+     * @return 匹配的RID列表
+     */
+    public List<RID> searchLessThanToNode(Value key) {
+        List<RID> result = new ArrayList<>();
+        
+        // 从最左侧的叶子节点开始
+        BPlusTreeLeafNode leftmost = this;
+        while (leftmost.prev != null) {
+            leftmost = leftmost.prev;
+        }
+        
+        BPlusTreeLeafNode current = leftmost;
+        while (current != null && current != this.next) {
+            for (int i = 0; i < current.keys.size(); i++) {
+                Value currentKey = current.keys.get(i);
+                if (currentKey.compareTo(key) < 0) {
+                    result.add(current.values.get(i));
+                } else {
+                    return result;
+                }
+            }
+            current = current.next;
+        }
+        return result;
+    }
+
+    /**
+     * 优化版本：搜索小于指定键的记录，到当前节点为止
+     * @param key 比较的键值
+     * @return 匹配的RID列表
+     */
+    public List<RID> searchLessThanOrEqualToNode(Value key) {
+        List<RID> result = new ArrayList<>();
+        
+        // 从最左侧的叶子节点开始
+        BPlusTreeLeafNode leftmost = this;
+        while (leftmost.prev != null) {
+            leftmost = leftmost.prev;
+        }
+        
+        BPlusTreeLeafNode current = leftmost;
+        while (current != null && current != this.next) {
+            for (int i = 0; i < current.keys.size(); i++) {
+                Value currentKey = current.keys.get(i);
+                if (currentKey.compareTo(key) <= 0) {
+                    result.add(current.values.get(i));
+                } else {
+                    return result;
+                }
+            }
+            current = current.next;
+        }
+        return result;
+    }
     
     // 获取值的类型信息
     private String getValueType(Value value) {

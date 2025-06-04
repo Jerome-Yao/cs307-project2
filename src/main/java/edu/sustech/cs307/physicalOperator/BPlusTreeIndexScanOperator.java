@@ -24,7 +24,7 @@ public class BPlusTreeIndexScanOperator implements PhysicalOperator {
     private final Value startKey;
     private final Value endKey;
     private final DBManager dbManager;
-    private final BPlusTreeIndexManager indexManager;
+    private final TableMeta table;
     
     private TableMeta tableMeta;
     private RecordFileHandle fileHandle;
@@ -35,44 +35,51 @@ public class BPlusTreeIndexScanOperator implements PhysicalOperator {
     
     // Constructor for exact match
     public BPlusTreeIndexScanOperator(String tableName, String columnName, 
-                                     Value searchKey, DBManager dbManager,
-                                     BPlusTreeIndexManager indexManager) {
+                                     Value searchKey, DBManager dbManager) throws DBException {
         this.tableName = tableName;
         this.columnName = columnName;
         this.searchKey = searchKey;
         this.startKey = null;
         this.endKey = null;
         this.dbManager = dbManager;
-        this.indexManager = indexManager;
+        this.table = dbManager.getMetaManager().getTable(tableName);
+        // this.indexManager = indexManager;
         this.isRangeQuery = false;
     }
     
     // Constructor for range query
     public BPlusTreeIndexScanOperator(String tableName, String columnName,
-                                     Value startKey, Value endKey, DBManager dbManager,
-                                     BPlusTreeIndexManager indexManager) {
+                                     Value startKey, Value endKey, DBManager dbManager)throws DBException {
         this.tableName = tableName;
         this.columnName = columnName;
         this.searchKey = null;
         this.startKey = startKey;
         this.endKey = endKey;
         this.dbManager = dbManager;
-        this.indexManager = indexManager;
+        this.table = dbManager.getMetaManager().getTable(tableName);
+        // this.indexManager = indexManager;
         this.isRangeQuery = true;
     }
     
     @Override
     public void Begin() throws DBException {
         tableMeta = dbManager.getMetaManager().getTable(tableName);
-        fileHandle = dbManager.getRecordManager().OpenFile(tableName);
-            
-        // List<RID> rids;
-        if (isRangeQuery) {
-            // rids = indexManager.rangeSearchIndex(tableName, columnName, startKey, endKey);
-        } else {
-            // rids = indexManager.searchIndex(tableName, columnName, searchKey);
+        if (tableMeta == null) {
+            throw new DBException("Table " + tableName + " does not exist.");
         }
-        // ridIterator = rids.iterator();
+        fileHandle = dbManager.getRecordManager().OpenFile(tableName);
+    
+        List<RID> rids;
+        BPlusTree tree = table.getBTreeIndex(columnName);
+        if (isRangeQuery) {
+            // BPlusTree tree = table.getBTreeIndex(columnName);
+            // 调用 B+ 树索引管理器的范围查询方法
+            rids = tree.rangeSearch(startKey, endKey);
+        } else {
+            // 调用 B+ 树索引管理器的精确查询方法
+            rids = tree.search(searchKey);
+        }
+        ridIterator = rids.iterator(); // 初始化 RID 迭代器
         isOpen = true;
     }
     

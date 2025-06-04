@@ -36,6 +36,10 @@ public class LogicalFilterOperator extends LogicalOperator {
         return condition;
     }
 
+    public Expression getWhereisExpr() {
+        return condition;
+    }
+
     public List<Tuple> getSubQueryTuples() {
         return subQueryTuples;
     }
