@@ -127,8 +127,9 @@ public class DBManager {
     public void dropTable(String table_name) throws DBException {
         // todo: finish drop table method
         Logger.info("Drop table: " + table_name);
-        metaManager.dropTable(table_name);
         recordManager.DeleteFile(table_name);
+        metaManager.dropTable(table_name);
+        bufferPool.DeleteAllPages(table_name);
         this.getBufferPool().FlushAllPages("");
     }
 

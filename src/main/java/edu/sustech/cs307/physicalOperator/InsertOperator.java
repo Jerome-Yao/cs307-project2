@@ -59,7 +59,7 @@ public class InsertOperator implements PhysicalOperator {
                         // 遍历所有索引
                         // System.out.println("------------"+tableMeta.getIndexTrees().keySet()+"-----------------");
 //                         System.out.println("111111111111111111111111111111");
-                        tableMeta.printColumns();
+                        // tableMeta.printColumns();
                         int tmp = values.size() - 1;
 //                         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         // System.out.println(values.size());
@@ -68,7 +68,7 @@ public class InsertOperator implements PhysicalOperator {
                                 break;
                             }
 //                            System.out.println("2222222222222222222222222222222");
-                            System.out.println("indexName: "+indexName);
+                            // System.out.println("indexName: "+indexName);
                             BPlusTree tree = tableMeta.getBTreeIndex(indexName);
                             // System.out.println(rid);
                             // if (tree == null) {
@@ -78,7 +78,7 @@ public class InsertOperator implements PhysicalOperator {
                             // System.out.println(rid);
                             // System.out.println(values.get(tmp));
                             tree.insert(values.get(tmp), rid);
-                            System.out.println(tree);
+                            // System.out.println(tree);
                             // System.out.println(values);
                             // System.out.println("344444444444444444444444444444444443333");
                             tree.printTree();

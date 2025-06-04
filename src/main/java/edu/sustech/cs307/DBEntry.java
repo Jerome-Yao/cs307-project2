@@ -6,6 +6,8 @@ import edu.sustech.cs307.meta.ColumnMeta;
 import edu.sustech.cs307.meta.MetaManager;
 import edu.sustech.cs307.optimizer.LogicalPlanner;
 import edu.sustech.cs307.optimizer.PhysicalPlanner;
+import edu.sustech.cs307.physicalOperator.DeleteOperator;
+import edu.sustech.cs307.physicalOperator.InsertOperator;
 import edu.sustech.cs307.physicalOperator.PhysicalOperator;
 import edu.sustech.cs307.storage.BufferPool;
 import edu.sustech.cs307.storage.DiskManager;
@@ -66,8 +68,7 @@ public class DBEntry {
                                     TerminalBuilder
                                             .builder()
                                             .dumb(true)
-                                            .build()
-                            )
+                                            .build())
                             .build();
                     Logger.info("CS307-DB> ");
                     sql = scanner.readLine();
@@ -99,8 +100,10 @@ public class DBEntry {
                     while (physicalOperator.hasNext()) {
                         physicalOperator.Next();
                         Tuple tuple = physicalOperator.Current();
-                        Logger.info(getRecordString(tuple));
-                        Logger.info(getSperator(physicalOperator.outputSchema().size()));
+                        if (!(physicalOperator instanceof InsertOperator) && !(physicalOperator instanceof DeleteOperator)) {
+                            Logger.info(getRecordString(tuple));
+                            Logger.info(getSperator(physicalOperator.outputSchema().size()));
+                        }
                     }
                     physicalOperator.Close();
                     dbManager.getBufferPool().FlushAllPages("");
@@ -130,7 +133,7 @@ public class DBEntry {
 
     public static String getRecordString(Tuple tuple) throws DBException {
         StringBuilder tuple_string = new StringBuilder("|");
-        Value[] values=tuple.getValues();
+        Value[] values = tuple.getValues();
         for (Value entry : tuple.getValues()) {
             String tabCol = String.format("%s", entry);
             String centeredText = StringUtils.center(tabCol, 15, ' ');
