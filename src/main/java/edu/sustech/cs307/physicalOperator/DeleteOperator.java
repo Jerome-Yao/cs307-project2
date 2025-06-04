@@ -20,7 +20,8 @@ import edu.sustech.cs307.value.ValueType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import edu.sustech.cs307.record.RID;
-
+import java.util.List;  // 新增：导入 List 类
+import java.util.Arrays; // 新增：导入 Arrays 类
 public class DeleteOperator implements PhysicalOperator {
 
     private final String data_file;
