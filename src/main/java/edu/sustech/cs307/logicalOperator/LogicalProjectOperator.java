@@ -41,7 +41,6 @@ public class LogicalProjectOperator extends LogicalOperator {
             } else if (selectItem.getExpression() instanceof Function function) {
                 // 处理函数表达式，特别是聚合函数
                 String functionName = function.getName().toUpperCase();
-                System.out.println(functionName);
                 String alias = selectItem.getAlias() != null ? selectItem.getAlias().getName() : functionName;
 
                 // 从函数参数获取表名和列名

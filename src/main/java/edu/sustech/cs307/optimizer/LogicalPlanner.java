@@ -20,7 +20,9 @@ import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
+import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.JSqlParser;
 import net.sf.jsqlparser.statement.DescribeStatement;
@@ -129,7 +131,6 @@ public class LogicalPlanner {
             if (whereExpr instanceof InExpression inExpression) {
                 System.out.println(inExpression.getRightExpression().getClass());
                 if (inExpression.getRightExpression() instanceof ParenthesedSelect subSelect) {
-                    System.out.println("use subselect");
                     // Create a LogicalOperator for the subselect
                     LogicalOperator subOperator = handleSelect(
                             dbManager,
@@ -145,8 +146,10 @@ public class LogicalPlanner {
                         throw new DBException(
                                 ExceptionTypes.InvalidTableWidth(subOutput.iterator().next().getValues().length));
                     }
-                    root = new LogicalFilterOperator(root, whereExpr, subOutput);
+                    root = new LogicalFilterOperator(root, whereExpr, subOutput, inExpression.isNot());
                 }
+            } else if (whereExpr instanceof ExistsExpression existsExpression) {
+                throw new DBException(ExceptionTypes.NOT_SUPPORTED_OPERATION);
             } else {
                 // fallback
                 root = new LogicalFilterOperator(root, whereExpr);
@@ -162,8 +165,6 @@ public class LogicalPlanner {
 
         if (aggregates.size() > 0 && plainSelect.getGroupBy() != null) {
             // Use LogicalAggregateOperator for queries with aggregates or GROUP BY
-            System.out.println(aggregates.size());
-            System.out.println("use aggregate operator");
             root = new LogicalAggregateOperator(root, plainSelect.getFromItem().toString(),
                     plainSelect.getGroupBy() != null ? plainSelect.getGroupBy().getGroupByExpressions() : null,
                     aggregates);
@@ -172,7 +173,14 @@ public class LogicalPlanner {
             root = new LogicalGroupByOperator(root, plainSelect.getFromItem().toString(),
                     plainSelect.getGroupBy().getGroupByExpressions());
         }
+        
         root = new LogicalProjectOperator(root, plainSelect.getSelectItems());
+        
+        // Handle ORDER BY clause
+        if (plainSelect.getOrderByElements() != null && !plainSelect.getOrderByElements().isEmpty()) {
+            root = new LogicalOrderByOperator(root, plainSelect.getOrderByElements());
+        }
+        
         return root;
     }
 

@@ -87,10 +87,10 @@ public class AggregateOperator implements PhysicalOperator {
         Map<TabCol, Value> resultValues = new LinkedHashMap<>();
 
         // Add group-by column values
-        // for (int i = 0; i < groupByColumns.size(); i++) {
-        // TabCol groupCol = groupByColumns.get(i);
-        // resultValues.put(groupCol, groupKey.get(i));
-        // }
+        for (int i = 0; i < groupByColumns.size(); i++) {
+            TabCol groupCol = groupByColumns.get(i);
+            resultValues.put(groupCol, groupKey.get(i));
+        }
 
         // Calculate aggregate values
         for (AggregateExpression aggExpr : aggregateExpressions) {
@@ -121,10 +121,10 @@ public class AggregateOperator implements PhysicalOperator {
         // Create a simplified tuple for aggregate results
         // We need to create a temporary TableMeta and Record for this
         // try {
-        //     System.out.println("here");
-        //     System.out.println(DBEntry.getRecordString(createAggregateTableTuple(resultValues)));
+        // System.out.println("here");
+        // System.out.println(DBEntry.getRecordString(createAggregateTableTuple(resultValues)));
         // } catch (DBException e) {
-        //     System.out.println("empty tuple");
+        // System.out.println("empty tuple");
 
         // }
         return createAggregateTableTuple(resultValues);
@@ -172,27 +172,25 @@ public class AggregateOperator implements PhysicalOperator {
         return new TableTuple("aggregate", null, null, null) {
             @Override
             public Value getValue(TabCol tabCol) throws DBException {
-                TabCol temp=resultValues.entrySet().iterator().next().getKey();
-                assert(tabCol.equals(temp));
+                TabCol temp = resultValues.entrySet().iterator().next().getKey();
+                assert (tabCol.equals(temp));
                 // Value value = resultValues.get(tabCol);
-                if (resultValues.get(tabCol) == null){
+                if (resultValues.get(tabCol) == null) {
                     // System.out.println("Value is null for column at getValue");
                     return null;
-                }
-                else{
+                } else {
                     return resultValues.get(tabCol);
                 }
-                
 
                 // Determine the type based on the value
                 // if (value instanceof Long) {
-                //     return new Value((Long) value);
+                // return new Value((Long) value);
                 // } else if (value instanceof Double) {
-                //     return new Value((Double) value);
+                // return new Value((Double) value);
                 // } else if (value instanceof String) {
-                //     return new Value((String) value);
+                // return new Value((String) value);
                 // } else {
-                //     return new Value(value.toString());
+                // return new Value(value.toString());
                 // }
             }
 
@@ -222,10 +220,12 @@ public class AggregateOperator implements PhysicalOperator {
         for (TabCol groupColKey : this.groupByColumns) {
             boolean found = false;
             for (ColumnMeta childColMeta : childOutputSchema) {
-                // Match by column name. Optionally, if groupColKey has a table name, match that too.
+                // Match by column name. Optionally, if groupColKey has a table name, match that
+                // too.
                 String groupColTableName = groupColKey.getTableName();
                 if (childColMeta.name.equalsIgnoreCase(groupColKey.getColumnName()) &&
-                    (groupColTableName == null || groupColTableName.isEmpty() || groupColTableName.equalsIgnoreCase(childColMeta.tableName))) {
+                        (groupColTableName == null || groupColTableName.isEmpty()
+                                || groupColTableName.equalsIgnoreCase(childColMeta.tableName))) {
                     newSchema.add(new ColumnMeta(childColMeta.tableName, childColMeta.name, childColMeta.type,
                             childColMeta.len, currentOffset));
                     currentOffset += childColMeta.len;
@@ -236,7 +236,8 @@ public class AggregateOperator implements PhysicalOperator {
             if (!found) {
                 // This should ideally be caught earlier by a semantic analyzer.
                 Logger.warn("Group by column " + groupColKey.toString() + " not found in child schema.");
-                // Consider throwing an exception or adding a placeholder with default properties.
+                // Consider throwing an exception or adding a placeholder with default
+                // properties.
                 // For now, we'll skip adding it if not found, which might lead to issues later.
             }
         }
@@ -260,28 +261,34 @@ public class AggregateOperator implements PhysicalOperator {
                 case SUM:
                     // Default to FLOAT, then check specific input type if a target column exists
                     resultType = ValueType.FLOAT;
-                    resultLength = 4; 
-                    if (targetCol != null && targetCol.getColumnName() != null && !targetCol.getColumnName().isEmpty()) {
+                    resultLength = 4;
+                    if (targetCol != null && targetCol.getColumnName() != null
+                            && !targetCol.getColumnName().isEmpty()) {
                         boolean targetFound = false;
                         for (ColumnMeta colMeta : childOutputSchema) {
                             String targetColTableName = targetCol.getTableName();
                             if (colMeta.name.equalsIgnoreCase(targetCol.getColumnName()) &&
-                                (targetColTableName == null || targetColTableName.isEmpty() || targetColTableName.equalsIgnoreCase(colMeta.tableName))) {
+                                    (targetColTableName == null || targetColTableName.isEmpty()
+                                            || targetColTableName.equalsIgnoreCase(colMeta.tableName))) {
                                 if (colMeta.type == ValueType.INTEGER) {
                                     resultType = ValueType.INTEGER;
                                     // resultLength remains 4 for INTEGER
                                 }
                                 // else, SUM of non-INTEGER (e.g., FLOAT) results in FLOAT.
-                                // If system supports DOUBLE, SUM of DOUBLE should be DOUBLE. Current logic maps to FLOAT.
+                                // If system supports DOUBLE, SUM of DOUBLE should be DOUBLE. Current logic maps
+                                // to FLOAT.
                                 targetFound = true;
                                 break;
                             }
                         }
                         if (!targetFound) {
-                             Logger.warn("Target column " + targetCol.toString() + " for SUM not found. Defaulting to FLOAT.");
+                            Logger.warn("Target column " + targetCol.toString()
+                                    + " for SUM not found. Defaulting to FLOAT.");
                         }
-                    } else { // SUM(*) or SUM(literal) - typically COUNT(*) semantics or depends on literal type
-                        Logger.warn("SUM without a direct column target (e.g., SUM(*) or SUM(literal)). Defaulting type to INTEGER (like COUNT).");
+                    } else { // SUM(*) or SUM(literal) - typically COUNT(*) semantics or depends on literal
+                             // type
+                        Logger.warn(
+                                "SUM without a direct column target (e.g., SUM(*) or SUM(literal)). Defaulting type to INTEGER (like COUNT).");
                         resultType = ValueType.INTEGER; // Treat like COUNT
                         resultLength = 4;
                     }
@@ -289,14 +296,16 @@ public class AggregateOperator implements PhysicalOperator {
                 case MIN:
                 case MAX:
                     // Default if target column not found or not applicable
-                    resultType = ValueType.CHAR; 
+                    resultType = ValueType.CHAR;
                     resultLength = 255; // Default length for fallback CHAR
-                    if (targetCol != null && targetCol.getColumnName() != null && !targetCol.getColumnName().isEmpty()) {
+                    if (targetCol != null && targetCol.getColumnName() != null
+                            && !targetCol.getColumnName().isEmpty()) {
                         boolean targetFound = false;
                         for (ColumnMeta colMeta : childOutputSchema) {
                             String targetColTableName = targetCol.getTableName();
-                             if (colMeta.name.equalsIgnoreCase(targetCol.getColumnName()) &&
-                                (targetColTableName == null || targetColTableName.isEmpty() || targetColTableName.equalsIgnoreCase(colMeta.tableName))) {
+                            if (colMeta.name.equalsIgnoreCase(targetCol.getColumnName()) &&
+                                    (targetColTableName == null || targetColTableName.isEmpty()
+                                            || targetColTableName.equalsIgnoreCase(colMeta.tableName))) {
                                 resultType = colMeta.type;
                                 resultLength = colMeta.len;
                                 targetFound = true;
@@ -304,19 +313,22 @@ public class AggregateOperator implements PhysicalOperator {
                             }
                         }
                         if (!targetFound) {
-                             Logger.warn("Target column " + targetCol.toString() + " for MIN/MAX not found. Using default CHAR type/length.");
+                            Logger.warn("Target column " + targetCol.toString()
+                                    + " for MIN/MAX not found. Using default CHAR type/length.");
                         }
                     } else {
-                         Logger.warn("MIN/MAX without a target column. Using default CHAR type/length.");
+                        Logger.warn("MIN/MAX without a target column. Using default CHAR type/length.");
                     }
                     break;
                 default:
-                    Logger.warn("Unhandled aggregate function type: " + aggExpr.getFunction() + ". Using default CHAR type/length.");
+                    Logger.warn("Unhandled aggregate function type: " + aggExpr.getFunction()
+                            + ". Using default CHAR type/length.");
                     resultType = ValueType.CHAR;
                     resultLength = 255;
                     break;
             }
-            // Use null for tableName for aggregate results, as they don't belong to a specific base table.
+            // Use null for tableName for aggregate results, as they don't belong to a
+            // specific base table.
             newSchema.add(new ColumnMeta(this.tableName, aggAlias, resultType, resultLength, currentOffset));
             currentOffset += resultLength;
         }

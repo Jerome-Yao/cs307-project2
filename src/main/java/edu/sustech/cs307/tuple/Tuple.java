@@ -1,5 +1,6 @@
 package edu.sustech.cs307.tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.sustech.cs307.exception.DBException;
@@ -11,7 +12,10 @@ import edu.sustech.cs307.value.ValueType;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.LateralSubSelect;
 
 public abstract class Tuple {
     public abstract Value getValue(TabCol tabCol) throws DBException;
@@ -24,7 +28,6 @@ public abstract class Tuple {
         return evaluateCondition(this, expr);
     }
 
-    // TODO
     public boolean eval_expr(List<Tuple> targetTuples, Expression whereExpr) throws DBException {
         for (Tuple tuple : targetTuples) {
             if (evaluateCondition(tuple, whereExpr)) {
@@ -34,7 +37,8 @@ public abstract class Tuple {
         return false;
     }
 
-    private boolean evaluateCondition(Tuple tuple, Expression whereExpr) {
+    @SuppressWarnings({ "unchecked", "deprecation" }) // For ExpressionList.getExpressions() and its raw type
+    private boolean evaluateCondition(Tuple tuple, Expression whereExpr) throws DBException {
         // todo: add Or condition
         if (whereExpr instanceof AndExpression andExpr) {
             // Recursively evaluate left and right expressions
@@ -46,6 +50,50 @@ public abstract class Tuple {
                     || evaluateCondition(tuple, orExpr.getRightExpression());
         } else if (whereExpr instanceof BinaryExpression binaryExpression) {
             return evaluateBinaryExpression(tuple, binaryExpression);
+        } else if (whereExpr instanceof InExpression inExpr) {
+            Value leftValue = tuple.evaluateExpression(inExpr.getLeftExpression());
+
+            if (leftValue == null || leftValue.value == null) {
+                return false;
+            }
+
+            Expression rightOperand = inExpr.getRightExpression(); // Use getRightExpression()
+
+            if (rightOperand instanceof ExpressionList expressionList) {
+                List<Expression> items = expressionList.getExpressions(); // This is deprecated and returns raw List
+                boolean foundMatch = false;
+                boolean listContainsNull = false;
+
+                if (items == null || items.isEmpty()) {
+                    return inExpr.isNot();
+                }
+
+                for (Expression itemExpr : items) {
+                    Value rightValue = tuple.evaluateExpression(itemExpr);
+                    if (rightValue == null || rightValue.value == null) {
+                        listContainsNull = true;
+                        continue;
+                    }
+                    if (ValueComparer.compare(leftValue, rightValue) == 0) {
+                        foundMatch = true;
+                        break;
+                    }
+                }
+
+                if (inExpr.isNot()) { // NOT IN logic
+                    if (foundMatch)
+                        return false;
+                    if (listContainsNull)
+                        return false;
+                    return true;
+                } else { // IN logic
+                    if (foundMatch)
+                        return true;
+                    return false;
+                }
+            } else {
+                throw new RuntimeException("Unsupported IN expression");
+            }
         } else {
             return true; // For non-binary and non-AND expressions, just return true for now
         }
@@ -83,7 +131,7 @@ public abstract class Tuple {
                 // rightColumn.getColumnName()));
                 // get table name
                 String table_name = rightColumn.getTableName();
-                if (tuple instanceof TableTuple) {
+                if (tuple instanceof TableTuple && table_name == null) {
                     TableTuple tableTuple = (TableTuple) tuple;
                     table_name = tableTuple.getTableName();
                 }
@@ -110,7 +158,37 @@ public abstract class Tuple {
             } else if (operator.equals(">=")) {
                 return comparisonResult >= 0;
             }
-            // todo: finish condition > < >= <=
+
+        } catch (DBException e) {
+            e.printStackTrace(); // Handle exception properly
+        }
+        return false;
+    }
+
+    public boolean evaluateSingleTuple(Tuple tuple) {
+        Value rightValue = null;
+        try {
+            rightValue = tuple.getValues()[0];
+            List<Value> typeMatchValues = new ArrayList<>();
+            for (Value value : this.getValues()) {
+                if (value.type != rightValue.type) {
+                    // If types do not match, skip this comparison
+                    continue;
+                } else {
+                    typeMatchValues.add(value);
+                }
+            }
+            if (typeMatchValues.size() == 1 || rightValue == null) {
+                return false;
+            }
+
+            for (Value leftValue : typeMatchValues) {
+                // Compare each value in the tuple with the right value
+                int comparisonResult = ValueComparer.compare(leftValue, rightValue);
+                if (comparisonResult == 0) {
+                    return true; // InExpression matches if any value matches
+                }
+            }
 
         } catch (DBException e) {
             e.printStackTrace(); // Handle exception properly
